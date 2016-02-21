@@ -20,19 +20,19 @@ import java.util.regex.Pattern;
 
 public class AutoScaledGroupOptions {
 
-    private Matcher containerPattern = Pattern.compile(".*").matcher("");
-    public static final String CONTAINER_PATTERN_DEFAULT = ".*";
-    private Matcher profilePattern = Pattern.compile(".*").matcher("");
-    public static final String PROFILE_PATTERN_DEFAULT = ".*";
+    private Matcher containerPattern = Pattern.compile("^auto.*").matcher("");
+    public static final String CONTAINER_PATTERN_DEFAULT = "^auto.*";
+    private Matcher profilePattern = Pattern.compile("^.*-auto").matcher("");
+    public static final String PROFILE_PATTERN_DEFAULT = "^.*-auto";
     private Boolean scaleContainers = true;
     public static final String SCALE_CONTAINERS_DEFAULT = "true";
-    private Boolean inheritRequirements = false;
-    public static final String INHERIT_REQUIREMENTS_DEFAULT = "false";
+    private Boolean inheritRequirements = true;
+    public static final String INHERIT_REQUIREMENTS_DEFAULT = "true";
     private Double maxDeviation = 1.0;
     public static final String MAX_DEVIATION_DEFAULT = "1.0";
     private Integer averageAssignmentsPerContainer = -1;
     public static final String AVERAGE_ASSIGNMENTS_PER_CONTAINER_DEFAULT = "-1";
-    private String containerPrefix = "autoscale";
+    private String containerPrefix = "auto";
     public static final String CONTAINER_PREFIX_DEFAULT = "auto";
     private Integer minContainerCount = 0;
     public static final String MIN_CONTAINER_COUNT_DEFAULT = "0";
@@ -40,8 +40,8 @@ public class AutoScaledGroupOptions {
     public static final String DEFAULT_MAX_INSTANCES_PER_HOST_DEFAULT = "1";
     private Boolean ignoreErrors = true;
     public static final String IGNORE_ERRORS_DEFAULT = "true";
-    private Integer maxContainersPerHost = 0;
-    public static final String MAX_CONTAINERS_PER_HOST_DEFAULT = "0";
+    private Integer maxContainersPerHost = 3;
+    public static final String MAX_CONTAINERS_PER_HOST_DEFAULT = "3";
 
     public AutoScaledGroupOptions() {}
 
