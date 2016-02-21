@@ -12,9 +12,7 @@ Not using autoscale we might create more containers with smaller heaps and sprea
 
 ## Solution
 
-Instead of the current autoscale concept focusing on the containers and applying one profile per container we should focus on the profiles.
-
-OK, so we have this pile of profiles. We have defined the desired running state with the profile requirements (instance limits and dependencies). With the combination of maxDeviation and averageAssignmentsPerContainer we can essentially define the shape of an elastic Fabric.
+Instead of fabric8's current autoscale concept focusing on the containers and applying one profile per container we should focus on the profiles. Profile requirements define the desired running state with the instance limits and dependencies. With the combination of maxDeviation and averageAssignmentsPerContainer parameters we can essentially define the shape of an elastic Fabric. Fuse-autoscaler component implements this profile-centric approach.
 
 Example config:
 
@@ -33,7 +31,7 @@ The autoscaler will start apply the assignments to containers matching the conta
 
 ## Configuration
 
-This component has the following parameters in io.fabric8.autoscale PID:
+Fuse-autoscaler uses the following parameters in io.fabric8.autoscale PID:
 
 * **pollTime (long: 10000)**: The number of milliseconds between polls to check if the system still has its requirements satisfied.
 * **autoscalerGroupId ("default")**: The group ID for this autoscaler. You can run multiple autoscalers concurrently as long as they have unique group IDs. If you do, take care that the profilePatterns don't overlap or things might get crazy.
@@ -48,6 +46,10 @@ This component has the following parameters in io.fabric8.autoscale PID:
 * **averageAssignmentsPerContainer (int: -1)**: The desired average number of profile assignments per container when scaling with containers.
 * **maxContainersPerHost (int: 0)**: Maximum allowed number of autoscaled containers per host. Set this to match the resources of your hosts.
 * **ignoreErrors (bool: true)**: Perform autoscaling even when all the requirements couldn't be satisfied.
+
+## Usage
+
+Add com.github.yuruki/fuse-autoscale bundle to *fabric* profile, or create a new profile with the bundle and assign it on one or more Fabric root containers. Add io.fabric8.autoscale.properties with the autoscale configuration to the profile.
 
 ## Caveats
 
@@ -71,7 +73,7 @@ Using a different profilePattern for test and production environments you can co
 
 io.fabric8.autoscale/
 * scaleContainers = true
-* profilePattern = ^(my-template-.*)|(my-bundle-.*-test)$
+* profilePattern = `^(my-template-.*)|(my-bundle-.*-test)$`
 * containerPattern = ^camel.*$
 * containerPrefix = camel
 * maxContainersPerHost = 3

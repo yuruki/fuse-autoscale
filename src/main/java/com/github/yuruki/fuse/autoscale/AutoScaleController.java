@@ -12,6 +12,9 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
  *  implied.  See the License for the specific language governing
  *  permissions and limitations under the License.
+ *
+ *  MODIFICATION: This file is from jboss-fuse/fabric8 project.
+ *  It has been modified for fuse-autoscale project by GitHub user yuruki.
  */
 package com.github.yuruki.fuse.autoscale;
 
@@ -62,7 +65,7 @@ public final class AutoScaleController extends AbstractComponent implements Grou
     @Reference(referenceInterface = FabricService.class, bind = "bindFabricService", unbind = "unbindFabricService")
     private final ValidatingReference<FabricService> fabricService = new ValidatingReference<FabricService>();
 
-    @Property(value = "10000", label = "Poll period", description = "The number of milliseconds between polls to check if the system still has its requirements satisfied.")
+    @Property(value = "15000", label = "Poll period", description = "The number of milliseconds between polls to check if the system still has its requirements satisfied.")
     private static final String POLL_TIME = "pollTime";
     private Long pollTime;
     @Property(value = "default", label = "Autoscaler group ID", description = "ID for the autoscaler group.")

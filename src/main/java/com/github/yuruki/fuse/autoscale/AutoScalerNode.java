@@ -12,6 +12,9 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
  *  implied.  See the License for the specific language governing
  *  permissions and limitations under the License.
+ *
+ *  MODIFICATION: This file is from jboss-fuse/fabric8 project.
+ *  It has been modified for fuse-autoscale project by GitHub user yuruki.
  */
 package com.github.yuruki.fuse.autoscale;
 
