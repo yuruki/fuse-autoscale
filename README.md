@@ -33,18 +33,18 @@ The autoscaler will start apply the assignments to containers matching the conta
 
 Fuse-autoscaler uses the following parameters in io.fabric8.autoscale PID:
 
-* **pollTime (long: 10000)**: The number of milliseconds between polls to check if the system still has its requirements satisfied.
+* **pollTime (long: 15000)**: The number of milliseconds between polls to check if the system still has its requirements satisfied.
 * **autoscalerGroupId ("default")**: The group ID for this autoscaler. You can run multiple autoscalers concurrently as long as they have unique group IDs. If you do, take care that the profilePatterns don't overlap or things might get crazy.
 * **scaleContainers (bool: true)**: Allow autoscaler to create, start and remove containers.
-* **profilePattern (regex: match all)**: Only matching profile names are considered for autoscaling.
-* **containerPattern (regex: match all)**: Only matching containers are used for profile assignment autoscaling.
+* **profilePattern (regex: `^.*-auto`)**: Only matching profile names are considered for autoscaling.
+* **containerPattern (regex: `^auto.*`)**: Only matching containers are used for profile assignment autoscaling.
 * **containerPrefix ("auto")**: Container name prefix used for new containers created by autoscaler. The prefix must match containerPattern. 
 * **defaultMaxInstancesPerHost (int: 1)**: Default value for maximum profile instances per host.
-* **minContainerCount (int: 1)**: Minimum number of applicable containers on which autoscaling can be performed.
+* **minContainerCount (int: 0)**: Minimum number of applicable containers on which autoscaling can be performed.
 * **maxDeviation (double: 1.0, >= 0)**: If a container has more than x + maximumDeviation * x profiles assigned, the excess profiles will be reassigned. x = matched profile count / applicable container count, rounded up.
-* **inheritRequirements (bool: false)**: Profile dependencies will inherit their requirements from the parent if their requirements are not set. Inherited requirements are transient and won't change your configured requirements.
+* **inheritRequirements (bool: true)**: Profile dependencies will inherit their requirements from the parent if their requirements are not set. Inherited requirements are transient and won't change your configured requirements.
 * **averageAssignmentsPerContainer (int: -1)**: The desired average number of profile assignments per container when scaling with containers.
-* **maxContainersPerHost (int: 0)**: Maximum allowed number of autoscaled containers per host. Set this to match the resources of your hosts.
+* **maxContainersPerHost (int: 3)**: Maximum allowed number of autoscaled containers per host. Set this to match the resources of your hosts.
 * **ignoreErrors (bool: true)**: Perform autoscaling even when all the requirements couldn't be satisfied.
 
 ## Usage
