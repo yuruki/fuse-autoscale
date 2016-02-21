@@ -99,7 +99,7 @@ public class ProfileContainerTest {
         for (ProfileContainer container : profileContainers) {
             assertFalse(container.getId() + " shouldn't have the profile yet", container.hasProfile(profile1));
         }
-        autoScaledGroup.addProfileRequirements(new ProfileRequirements(profile1.getId()).minimumInstances(1));
+        autoScaledGroup.addProfile(new ProfileRequirements(profile1.getId()).minimumInstances(1));
         for (ProfileContainer container : profileContainers) {
             assertTrue("Profile missing in " + container.getId(), container.hasProfile(profile1));
         }

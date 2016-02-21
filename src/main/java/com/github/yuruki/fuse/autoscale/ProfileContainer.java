@@ -67,14 +67,14 @@ public abstract class ProfileContainer {
         return false;
     }
 
-    public void addProfileRequirements(ProfileRequirements profile) throws Exception {
+    public void addProfile(ProfileRequirements profile) throws Exception {
         if (profile.hasMinimumInstances()) {
             int count = profile.getMinimumInstances();
             for (int i = 0; i < count; i++) {
                 Exception exception = null;
                 for (ProfileContainer child : getSortedChildren()) {
                     try {
-                        child.addProfileRequirements(profile);
+                        child.addProfile(profile);
                         break;
                     } catch (Exception e) {
                         exception = e;
@@ -206,7 +206,7 @@ public abstract class ProfileContainer {
     public void removeProfiles(long count) {
         for (int i = 0; i < count; i++) {
             List<ProfileContainer> children = new LinkedList<>(getSortedChildren());
-            children.get(children.size()).removeProfiles(1);
+            children.get(children.size() - 1).removeProfiles(1); // Remove from last
         }
     }
 

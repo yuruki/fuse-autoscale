@@ -106,7 +106,7 @@ public class AutoScaledGroup extends ProfileContainer {
 
         // Apply collected profile requirements on the containers
         for (ProfileRequirements profile : profileRequirementsSet) {
-            addProfileRequirements(profile);
+            addProfile(profile);
         }
     }
 
@@ -239,14 +239,17 @@ public class AutoScaledGroup extends ProfileContainer {
     }
 
     @Override
-    public void addProfileRequirements(ProfileRequirements profile) throws Exception {
+    public void addProfile(ProfileRequirements profile) throws Exception {
+        adjustWithMaxInstancesPerContainer();
+        adjustWithMaxInstancesPerHost(profile);
+        adjustWithMaxInstancesPerGroup(profile);
         if (profile.hasMinimumInstances()) {
             int count = profile.getMinimumInstances();
             Exception exception = null;
             count: for (int i = 0; i < count; i++) {
                 for (ProfileContainer container : getSortedGrandChildren()) {
                     try {
-                        container.addProfileRequirements(profile);
+                        container.addProfile(profile);
                         continue count;
                     } catch (Exception e) {
                         exception = e;
@@ -259,6 +262,33 @@ public class AutoScaledGroup extends ProfileContainer {
                         throw new Exception("Couldn't satisfy requirements for profile " + profile.getProfile(), exception);
                     }
                 }
+            }
+        }
+    }
+
+    private void adjustWithMaxInstancesPerContainer() {
+        for (ProfileContainer container : getGrandChildren()) {
+            removeProfiles(container.getProfileCount() - maxAssignmentsPerContainer);
+        }
+    }
+
+    private void adjustWithMaxInstancesPerHost(ProfileRequirements profile) {
+        if (profile.getMaximumInstancesPerHost() != null) {
+            for (ProfileContainer host : getChildren()) {
+                int maxInstancesPerHost = profile.getMaximumInstancesPerHost();
+                if (host.getProfileCount(profile) > maxInstancesPerHost) {
+                    host.removeProfile(profile, host.getProfileCount(profile) - maxInstancesPerHost);
+                }
+            }
+        }
+    }
+
+    private void adjustWithMaxInstancesPerGroup(ProfileRequirements profile) {
+        if (profile.getMaximumInstances() != null) {
+            int maxInstances = profile.getMaximumInstances();
+            int delta = getProfileCount(profile) - maxInstances;
+            if (delta > 0) {
+                removeProfile(profile, delta);
             }
         }
     }

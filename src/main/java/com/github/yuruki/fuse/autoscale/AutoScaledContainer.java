@@ -158,10 +158,7 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
     }
 
     @Override
-    public void addProfileRequirements(ProfileRequirements profile) throws Exception {
-        adjustWithMaxInstancesPerContainer();
-        adjustWithMaxInstancesPerHost(profile);
-        adjustWithMaxInstancesPerGroup(profile);
+    public void addProfile(ProfileRequirements profile) throws Exception {
         if (removed){
             throw new Exception("Can't assign " + profile.getProfile() + " to container marked as removed (" + id + ").");
         } else if (getProfileCount() >= group.getMaxAssignmentsPerContainer()) {
@@ -172,29 +169,6 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
             throw new Exception("Can't assign " + profile.getProfile() + " to container " + id + ", due to maxInstances (" + profile.getMaximumInstances() + ").");
         } else {
             profiles.put(profile.getProfile(), true);
-        }
-    }
-
-    private void adjustWithMaxInstancesPerContainer() {
-        removeProfiles(getProfileCount() - group.getMaxAssignmentsPerContainer());
-    }
-
-    private void adjustWithMaxInstancesPerHost(ProfileRequirements profile) {
-        if (profile.getMaximumInstancesPerHost() != null) {
-            int maxInstancesPerHost = profile.getMaximumInstancesPerHost();
-            if (host.getProfileCount(profile) > maxInstancesPerHost) {
-                host.removeProfile(profile, host.getProfileCount(profile) - maxInstancesPerHost);
-            }
-        }
-    }
-
-    private void adjustWithMaxInstancesPerGroup(ProfileRequirements profile) {
-        if (profile.getMaximumInstances() != null) {
-            int maxInstances = profile.getMaximumInstances();
-            int delta = group.getProfileCount(profile) - maxInstances;
-            if (delta > 0) {
-                group.removeProfile(profile, delta);
-            }
         }
     }
 
