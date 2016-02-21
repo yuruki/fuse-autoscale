@@ -37,7 +37,6 @@ public class AutoScaledGroup extends ProfileContainer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AutoScaledGroup.class);
 
-    private final Map<String, ProfileRequirements> profileRequirementsMap = new HashMap<>();
     private final AutoScaledGroupOptions options;
     private final Long maxAssignmentsPerContainer;
 
@@ -46,13 +45,14 @@ public class AutoScaledGroup extends ProfileContainer {
         this.options = options;
 
         // Collect all applicable profile requirements
+        Set<ProfileRequirements> profileRequirementsSet = new HashSet<>();
         int profileInstancesTotal = 0; // Total number of required profile instances
-        int requiredHosts = 0; // Number of hosts needed to satisfy the requirements
+        int requiredHosts = 1; // Number of hosts needed to satisfy the requirements
         for (ProfileRequirements profile : pruneProfileRequirements(profileRequirements, options.getProfilePattern(), options.getInheritRequirements())) {
             if (profile.getMaximumInstancesPerHost() == null) {
-                profile.setMaximumInstancesPerHost(options.getDefaultMaximumInstancesPerHost());
+                profile.setMaximumInstancesPerHost(options.getDefaultMaxInstancesPerHost());
             }
-            profileRequirementsMap.put(profile.getProfile(), profile);
+            profileRequirementsSet.add(profile);
             if (profile.hasMinimumInstances() && profile.getMaximumInstancesPerHost() > 0) {
                 requiredHosts = Math.max(requiredHosts, (profile.getMinimumInstances() + profile.getMaximumInstancesPerHost() - 1) / profile.getMaximumInstancesPerHost());
             }
@@ -64,15 +64,16 @@ public class AutoScaledGroup extends ProfileContainer {
         }
 
         // Collect root container hosts
+        Set<String> collectedHosts = new HashSet<>();
         for (Container container : containers) {
             if (container.isRoot()) {
                 addChild(new AutoScaledHost(container.getIp(), container));
+                collectedHosts.add(container.getIp());
             }
         }
 
         // Collect all applicable containers
         if (options.getScaleContainers()) {
-            Set<String> collectedHosts = new HashSet<>();
             for (Container container : containers) {
                 if (options.getContainerPattern().reset(container.getId()).matches()) {
                     AutoScaledContainer.newAutoScaledContainer(this, container);
@@ -92,6 +93,7 @@ public class AutoScaledGroup extends ProfileContainer {
             for (Container container : containers) {
                 if (options.getContainerPattern().reset(container.getId()).matches() && container.isAlive()) {
                     AutoScaledContainer.newAutoScaledContainer(this, container);
+                    collectedHosts.add(container.getIp());
                 }
             }
             if (getGrandChildren().size() < options.getMinContainerCount()) {
@@ -102,8 +104,10 @@ public class AutoScaledGroup extends ProfileContainer {
         // Calculate max profile instances per container
         this.maxAssignmentsPerContainer = calculateMaxAssignmentsPerContainer(getGrandChildren().size(), profileInstancesTotal, options.getAverageAssignmentsPerContainer(), options.getMaxDeviation());
 
-        // Apply profile requirements on the containers
-        applyProfileRequirements();
+        // Apply collected profile requirements on the containers
+        for (ProfileRequirements profile : profileRequirementsSet) {
+            addProfileRequirements(profile);
+        }
     }
 
     private void adjustContainerCount(int containerDelta, int hostDelta, ContainerFactory containerFactory) throws Exception {
@@ -155,61 +159,6 @@ public class AutoScaledGroup extends ProfileContainer {
             throw new Exception("Container prefix doesn't match the container pattern.");
         }
         throw new Exception("Couldn't determine new container ID. This should never happen.");
-    }
-
-    private void applyProfileRequirements() throws Exception {
-        adjustWithMaxInstancesPerContainer();
-        adjustWithMaxInstancesPerHost();
-        adjustWithMaxInstances();
-        adjustWithMinInstances();
-    }
-
-    private void adjustWithMaxInstancesPerContainer() {
-        for (ProfileContainer container : getGrandChildren()) {
-            long delta = container.getProfileCount() - maxAssignmentsPerContainer;
-            container.removeProfiles(delta);
-        }
-    }
-
-    private void adjustWithMaxInstancesPerHost() {
-        for (ProfileRequirements profile : profileRequirementsMap.values()) {
-            int maxInstancesPerHost = profile.getMaximumInstancesPerHost();
-            for (ProfileContainer host : getChildren()) {
-                if (host.getProfileCount(profile) > maxInstancesPerHost) {
-                    host.removeProfile(profile, host.getProfileCount(profile) - maxInstancesPerHost);
-                }
-            }
-        }
-    }
-
-    private void adjustWithMaxInstances() {
-        for (ProfileRequirements profile : profileRequirementsMap.values()) {
-            if (profile.getMaximumInstances() != null) {
-                int maxInstances = profile.getMaximumInstances();
-                int delta = getProfileCount(profile) - maxInstances;
-                if (delta > 0) {
-                    removeProfile(profile, delta);
-                }
-            }
-        }
-    }
-
-    private void adjustWithMinInstances() throws Exception {
-        for (ProfileRequirements profile : profileRequirementsMap.values()) {
-            if (profile.hasMinimumInstances()) {
-                int delta = profile.getMinimumInstances() - getProfileCount(profile);
-                if (delta > 0) {
-                    try {
-                        addProfile(profile, delta);
-                    } catch (Exception e) {
-                        LOGGER.error("Couldn't assign {} instances for profile {}", delta, profile.getProfile(), e);
-                        if (!options.getIgnoreErrors()) {
-                            throw e;
-                        }
-                    }
-                }
-            }
-        }
     }
 
     // Check the profile requirements against profile pattern and check the profile dependencies
@@ -278,7 +227,7 @@ public class AutoScaledGroup extends ProfileContainer {
         return prunedProfileRequirements;
     }
 
-    // Return the preferred maximum profile assignment count for a single container
+    // Return the preferred max profile assignment count for a single container
     private static long calculateMaxAssignmentsPerContainer(int containers, int profileInstances, int desiredAveragePerContainer, double maxDeviation) {
         long average = desiredAveragePerContainer;
         if (desiredAveragePerContainer < 0 && containers > 0) {
@@ -290,19 +239,26 @@ public class AutoScaledGroup extends ProfileContainer {
     }
 
     @Override
-    public void addProfile(ProfileRequirements profile, int count) throws Exception {
-        Exception exception = null;
-        count: for (int i = 0; i < count; i++) {
-            for (ProfileContainer container : getSortedGrandChildren()) {
-                try {
-                    container.addProfile(profile);
-                    continue count;
-                } catch (Exception e) {
-                    exception = e;
+    public void addProfileRequirements(ProfileRequirements profile) throws Exception {
+        if (profile.hasMinimumInstances()) {
+            int count = profile.getMinimumInstances();
+            Exception exception = null;
+            count: for (int i = 0; i < count; i++) {
+                for (ProfileContainer container : getSortedGrandChildren()) {
+                    try {
+                        container.addProfileRequirements(profile);
+                        continue count;
+                    } catch (Exception e) {
+                        exception = e;
+                    }
                 }
-            }
-            if (exception != null) {
-                throw new Exception("Couldn't add profile " + profile.getProfile() + " to group " + id, exception);
+                if (exception != null) {
+                    if (options.getIgnoreErrors()) {
+                        LOGGER.error("Couldn't satisfy requirements for profile {}. This exception is ignored.", profile.getProfile(), exception);
+                    } else {
+                        throw new Exception("Couldn't satisfy requirements for profile " + profile.getProfile(), exception);
+                    }
+                }
             }
         }
     }

@@ -70,7 +70,7 @@ public class AutoScaledGroupTest {
             .inheritRequirements(true)
             .containerPrefix("auto")
             .minContainerCount(1)
-            .defaultMaximumInstancesPerHost(1);
+            .defaultMaxInstancesPerHost(1);
 
         // Set up auto-scaled group
         AutoScaledGroup autoScaledGroup = new AutoScaledGroup("test", options, containerList.toArray(new Container[containerList.size()]), profileRequirements.toArray(new ProfileRequirements[profileRequirements.size()]), new ContainerFactory(fabricService));
@@ -127,7 +127,7 @@ public class AutoScaledGroupTest {
             .inheritRequirements(true)
             .containerPrefix("auto")
             .minContainerCount(1)
-            .defaultMaximumInstancesPerHost(1);
+            .defaultMaxInstancesPerHost(1);
 
         // Set up auto-scaled group
         assertEquals("Warnings or errors logged too early", 0, appender.getLog().size());
@@ -185,7 +185,7 @@ public class AutoScaledGroupTest {
             .scaleContainers(true)
             .inheritRequirements(true)
             .containerPrefix("auto")
-            .defaultMaximumInstancesPerHost(1)
+            .defaultMaxInstancesPerHost(1)
             .averageAssignmentsPerContainer(10);
 
         // Set up auto-scaled group
@@ -250,7 +250,7 @@ public class AutoScaledGroupTest {
             .scaleContainers(true)
             .inheritRequirements(true)
             .containerPrefix("auto")
-            .defaultMaximumInstancesPerHost(1)
+            .defaultMaxInstancesPerHost(1)
             .averageAssignmentsPerContainer(10);
 
         // Set up auto-scaled group
@@ -267,6 +267,55 @@ public class AutoScaledGroupTest {
         assertTrue("otherContainer doesn't have otherProfile", otherContainerProfiles.contains(otherProfile));
         List<Profile> oneContainerProfiles = Arrays.asList(oneContainer.getProfiles());
         assertTrue("oneContainer doesn't have oneProfile", oneContainerProfiles.contains(oneProfile));
+    }
+
+    @Test
+    public void testTooManyInitialProfiles() throws Exception {
+        List<ProfileRequirements> profileRequirements;
+
+        // Set up profiles and versions
+        MockProfile oneProfile = new MockProfile("one-auto");
+        MockProfile otherProfile = new MockProfile("other-auto");
+        MockProfile noreqProfile = new MockProfile("no-requirements-auto");
+        MockProfile min1Profile = new MockProfile("min1-auto");
+        MockVersion version = new MockVersion("1.0");
+        version.addProfile(oneProfile);
+        version.addProfile(otherProfile);
+        version.addProfile(noreqProfile);
+        version.addProfile(min1Profile);
+
+        // Set up initial containers
+        List<Container> containerList = new ArrayList<>();
+        MockContainer oneContainer = new MockContainer("auto1", true, "1");
+        oneContainer.setVersion(version);
+        oneContainer.addProfiles(oneProfile, otherProfile, noreqProfile, min1Profile);
+        containerList.add(oneContainer);
+
+        // Set up profile requirements
+        profileRequirements = new ArrayList<>();
+        profileRequirements.add(new ProfileRequirements(noreqProfile.getId())); // No requirements
+        profileRequirements.add(new ProfileRequirements(min1Profile.getId()).minimumInstances(1)); // Minimum instances
+
+        // Set up options
+        AutoScaledGroupOptions options = new AutoScaledGroupOptions()
+            .containerPattern(Pattern.compile("^auto.*$").matcher(""))
+            .profilePattern(Pattern.compile("^.*-auto$").matcher(""))
+            .scaleContainers(true)
+            .inheritRequirements(true)
+            .containerPrefix("auto")
+            .defaultMaxInstancesPerHost(1)
+            .maxDeviation(0.0)
+            .averageAssignmentsPerContainer(1);
+
+        // Set up auto-scaled group
+        assertEquals("Warnings or errors logged too early", 0, appender.getLog().size());
+        AutoScaledGroup autoScaledGroup = new AutoScaledGroup("test", options, containerList.toArray(new Container[containerList.size()]), profileRequirements.toArray(new ProfileRequirements[profileRequirements.size()]), new ContainerFactory(fabricService));
+        autoScaledGroup.apply(5000);
+
+        // We should have only min1Profile left
+        List<Profile> oneContainerProfiles = Arrays.asList(oneContainer.getProfiles());
+        assertTrue("Profile missing", oneContainerProfiles.contains(min1Profile));
+        assertEquals("Wrong profile count", 1, oneContainerProfiles.size());
     }
 
     private class TestAppender extends AppenderSkeleton {

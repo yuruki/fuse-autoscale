@@ -22,14 +22,20 @@ public class MockContainer implements Container {
     private List<Profile> profileList = new ArrayList<>();
     private Boolean alive;
     private String ipAddress;
+    private Boolean root;
     private String versionId;
     private Version version;
     private Boolean destroyed;
 
-    public MockContainer(String id, Boolean alive, String ipAddress) {
+    public MockContainer(String id, boolean alive, String ipAddress, boolean root) {
         this.id = id;
         this.alive = alive;
         this.ipAddress = ipAddress;
+        this.root = root;
+    }
+
+    public MockContainer(String id, boolean alive, String ipAddress) {
+        this(id, alive, ipAddress, false);
     }
 
     @Override
@@ -74,7 +80,7 @@ public class MockContainer implements Container {
 
     @Override
     public boolean isRoot() {
-        return false;
+        return root;
     }
 
     @Override

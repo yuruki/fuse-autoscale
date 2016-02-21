@@ -38,6 +38,14 @@ public abstract class ProfileContainer {
     protected Boolean removed = false;
     protected Comparator<ProfileContainer> childComparator = new SortByContainerCount();
 
+    final public boolean hasChild(String id) {
+        return childMap.containsKey(id);
+    }
+
+    final public ProfileContainer getChild(String id) {
+        return childMap.get(id);
+    }
+
     final public boolean hasProfile(Profile profile) {
         return hasProfile(profile.getId());
     }
@@ -59,24 +67,22 @@ public abstract class ProfileContainer {
         return false;
     }
 
-    final public void addProfile(ProfileRequirements profile) throws Exception {
-        addProfile(profile, 1);
-    }
-
-    public void addProfile(ProfileRequirements profile, int count) throws Exception {
-        for (int i = 0; i < count; i++) {
-            List<ProfileContainer> children = new LinkedList<>(getSortedChildren());
-            Exception exception = null;
-            for (ProfileContainer child : children) {
-                try {
-                    child.addProfile(profile);
-                    break;
-                } catch (Exception e) {
-                    exception = e;
+    public void addProfileRequirements(ProfileRequirements profile) throws Exception {
+        if (profile.hasMinimumInstances()) {
+            int count = profile.getMinimumInstances();
+            for (int i = 0; i < count; i++) {
+                Exception exception = null;
+                for (ProfileContainer child : getSortedChildren()) {
+                    try {
+                        child.addProfileRequirements(profile);
+                        break;
+                    } catch (Exception e) {
+                        exception = e;
+                    }
                 }
-            }
-            if (exception != null) {
-                throw new Exception("Couldn't add profile " + profile.getProfile() + " to host " + id, exception);
+                if (exception != null) {
+                    throw new Exception("Couldn't add profile " + profile.getProfile() + " to " + id, exception);
+                }
             }
         }
     }

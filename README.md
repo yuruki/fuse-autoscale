@@ -2,7 +2,7 @@
 
 ## Background
 
-We are running Red Hat JBoss Fuse 6.2.1 (fabric8 1.2) with Apache Karaf on 3 and 5 node Fabric ensembles. We have one CamelContext per bundle and one Fabric profile per bundle. Totaling at over 100 CamelContexts, bundles and profiles each.
+We are running Red Hat JBoss Fuse 6.2.1 (fabric8 1.2) with Apache Karaf on 3 and 5 node Fabric ensembles. We have one CamelContext per bundle and one Fabric profile per bundle. This adds up to over 100 of CamelContexts, bundles and profiles each.
 
 The problem we are facing is scaling. The bundles keep piling up but they are still running on one Karaf container per host. The JVM heap size is getting a bit unwieldy.
 

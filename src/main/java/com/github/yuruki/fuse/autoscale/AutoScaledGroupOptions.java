@@ -36,7 +36,7 @@ public class AutoScaledGroupOptions {
     public static final String CONTAINER_PREFIX_DEFAULT = "auto";
     private Integer minContainerCount = 0;
     public static final String MIN_CONTAINER_COUNT_DEFAULT = "0";
-    private Integer defaultMaximumInstancesPerHost = 1;
+    private Integer defaultMaxInstancesPerHost = 1;
     public static final String DEFAULT_MAX_INSTANCES_PER_HOST_DEFAULT = "1";
     private Boolean ignoreErrors = true;
     public static final String IGNORE_ERRORS_DEFAULT = "true";
@@ -54,7 +54,7 @@ public class AutoScaledGroupOptions {
         Integer averageAssignmentsPerContainer,
         String containerPrefix,
         Integer minContainerCount,
-        Integer defaultMaximumInstancesPerHost,
+        Integer defaultMaxInstancesPerHost,
         Boolean ignoreErrors,
         Integer maxContainersPerHost) {
         this.containerPattern = containerPattern;
@@ -65,7 +65,7 @@ public class AutoScaledGroupOptions {
         this.averageAssignmentsPerContainer = averageAssignmentsPerContainer;
         this.containerPrefix = containerPrefix;
         this.minContainerCount = minContainerCount;
-        this.defaultMaximumInstancesPerHost = defaultMaximumInstancesPerHost;
+        this.defaultMaxInstancesPerHost = defaultMaxInstancesPerHost;
         this.ignoreErrors = ignoreErrors;
         this.maxContainersPerHost = maxContainersPerHost;
     }
@@ -110,8 +110,8 @@ public class AutoScaledGroupOptions {
         return this;
     }
 
-    public AutoScaledGroupOptions defaultMaximumInstancesPerHost(Integer defaultMaximumInstancesPerHost) {
-        setDefaultMaximumInstancesPerHost(defaultMaximumInstancesPerHost);
+    public AutoScaledGroupOptions defaultMaxInstancesPerHost(Integer defaultMaxInstancesPerHost) {
+        setDefaultMaxInstancesPerHost(defaultMaxInstancesPerHost);
         return this;
     }
 
@@ -189,12 +189,12 @@ public class AutoScaledGroupOptions {
         this.minContainerCount = minContainerCount;
     }
 
-    public Integer getDefaultMaximumInstancesPerHost() {
-        return defaultMaximumInstancesPerHost;
+    public Integer getDefaultMaxInstancesPerHost() {
+        return defaultMaxInstancesPerHost;
     }
 
-    public void setDefaultMaximumInstancesPerHost(Integer defaultMaximumInstancesPerHost) {
-        this.defaultMaximumInstancesPerHost = defaultMaximumInstancesPerHost;
+    public void setDefaultMaxInstancesPerHost(Integer defaultMaxInstancesPerHost) {
+        this.defaultMaxInstancesPerHost = defaultMaxInstancesPerHost;
     }
 
     public Boolean getIgnoreErrors() {
