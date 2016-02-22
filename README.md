@@ -53,13 +53,13 @@ Add com.github.yuruki/fuse-autoscale bundle to *fabric* profile, or create a new
 
 ### Maintenance mode
 
-When *scaleContainers* is set to *true*, shutting down containers in order to boot the host cleanly or deleting containers can be difficult because the autoscaler keeps restarting and recreating the containers.
+When *scaleContainers* is set to *true*, deleting containers or shutting them down in order to reboot the host cleanly can be difficult because the autoscaler keeps restarting and recreating the containers.
 
-To enter so-called Maintenance mode that allows you to work with container lifecycles set *scaleContainers* to *false* and increase *maxDeviation* to at least *1* to allow profiles to migrate to another container if necessary. You can perform the change with for example *fabric:profile-edit --pid io.fabric8.autoscale/scaleContainers=false --pid io.fabric8.autoscale/maxDeviation=1 your-profile* command. Set *scaleContainers* and *maxDeviation* back to their original values when you are done with the host.
+To enter so-called Maintenance mode which allows you to work with container lifecycle manually, set *scaleContainers* to *false* and increase *maxDeviation* to *1* (depends on your setup) to allow profiles to migrate to other containers. You can perform the change with for example *fabric:profile-edit --pid io.fabric8.autoscale/scaleContainers=false --pid io.fabric8.autoscale/maxDeviation=1 your-profile* command. Set *scaleContainers* and *maxDeviation* back to their original values when you are done and the host is ready.
 
 ## Caveats
 
-Autoscaler can only create child containers. Feel free to add the other container providers to the component.
+Autoscaler can only create child containers for now. Feel free to add the other container providers to the component.
 
 ## Example 1
 
@@ -69,7 +69,7 @@ io.fabric8.autoscale/
 * containerPattern = ^camel.*$
 * defaultMaxInstancesPerHost = 1
 
-With this configuration the autoscaler will not create or remove any containers. Instead it will assign matched profiles according to their requirements. The autoscaler will consider profiles that end with "-dev" and containers whose name starts with "camel". By default the maximum profile instances per host are limited to 1.
+With this configuration the autoscaler will not create, start or remove any containers. Instead it will try to assign all matched profiles according to their requirements on applicable containers. The autoscaler will consider profiles that end with "-dev" and containers whose name starts with "camel". By default the maximum profile instances per host are limited to 1.
 
 The autoscaler will make an effort to spread the profiles evenly across the applicable containers. If the requirements change, the autoscaler will adjust the assignments accordingly.
 
@@ -90,6 +90,6 @@ io.fabric8.autoscale/
 
 This is a configuration we will probably use in our UAT environment. The autoscaler will consider profiles that match "my-template-" or "my-bundle-*-test" and assign them on containers starting with "camel".
 
-We don't configure maximum instances per host on the profile requirements so the autoscaler will use the default value of 1.
+We don't configure maximum instances per host in the profile requirements so the autoscaler will use the default value of 1.
 
 We will only define the requirements for the profiles that we explicitly want to assign. Profile dependencies defined via dependsOn mechanism will inherit their requirements from their parents. This will keep the profile requirements DRY.
