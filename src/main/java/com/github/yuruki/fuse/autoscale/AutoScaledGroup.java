@@ -203,7 +203,7 @@ public class AutoScaledGroup extends ProfileContainer {
         }
         // Add this profile requirement to the result
         prunedProfileRequirements.put(parent.getProfile(), parent);
-        if (parent.getDependentProfiles() == null) {
+        if (parent.getDependentProfiles() == null || parent.getDependentProfiles().isEmpty()) {
             // Profile doesn't have dependencies
             return prunedProfileRequirements;
         }
@@ -261,10 +261,10 @@ public class AutoScaledGroup extends ProfileContainer {
     public void addProfile(ProfileRequirements profile) throws Exception {
         adjustWithMaxInstancesPerHost(profile);
         adjustWithMaxInstancesPerGroup(profile);
-        if (profile.hasMinimumInstances()) {
-            int count = profile.getMinimumInstances();
+        if (profile.hasMinimumInstances() && profile.getMinimumInstances() > getProfileCount(profile)) {
+            int delta = profile.getMinimumInstances() - getProfileCount(profile);
             Exception exception = null;
-            count: for (int i = 0; i < count; i++) {
+            count: for (int i = 0; i < delta; i++) {
                 for (ProfileContainer container : getSortedGrandChildren()) {
                     try {
                         container.addProfile(profile);
