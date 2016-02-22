@@ -93,7 +93,7 @@ public class AutoScaledGroup extends ProfileContainer {
         if (options.getScaleContainers()) {
             for (Container container : containers) {
                 if (options.getContainerPattern().reset(container.getId()).matches()) {
-                    AutoScaledContainer.newAutoScaledContainer(this, container);
+                    AutoScaledContainer.newAutoScaledContainer(this, container, containerFactory);
                 }
             }
             if (options.getAverageAssignmentsPerContainer() < 1) {
@@ -109,7 +109,7 @@ public class AutoScaledGroup extends ProfileContainer {
         } else {
             for (Container container : containers) {
                 if (options.getContainerPattern().reset(container.getId()).matches() && container.isAlive()) {
-                    AutoScaledContainer.newAutoScaledContainer(this, container);
+                    AutoScaledContainer.newAutoScaledContainer(this, container, containerFactory);
                 }
             }
             if (getGrandChildren().size() < options.getMinContainerCount()) {

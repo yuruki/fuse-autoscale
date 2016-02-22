@@ -222,10 +222,10 @@ public abstract class ProfileContainer {
         List<ProfileContainer> result = new LinkedList<>();
         Comparator<ProfileContainer> grandChildComparator = null;
         for (ProfileContainer child : getChildren()) {
-            List<ProfileContainer> grandChildren = new ArrayList<>(child.getChildren());
-            if (grandChildComparator == null && !grandChildren.isEmpty()) {
-                grandChildComparator = grandChildren.get(0).childComparator;
+            if (grandChildComparator == null) {
+                grandChildComparator = child.childComparator;
             }
+            List<ProfileContainer> grandChildren = new ArrayList<>(child.getChildren());
             result.addAll(grandChildren);
         }
         Collections.sort(result, grandChildComparator);

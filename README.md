@@ -34,7 +34,7 @@ The autoscaler will start apply the assignments to containers matching the conta
 Fuse-autoscaler uses the following parameters in io.fabric8.autoscale PID:
 
 * **pollTime (long: 15000)**: The number of milliseconds between polls to check if the system still has its requirements satisfied.
-* **autoscalerGroupId ("default")**: The group ID for this autoscaler. You can run multiple autoscalers concurrently as long as they have unique group IDs. If you do, take care that the profilePatterns don't overlap or things might get crazy.
+* **autoscalerGroupId ("default")**: (NOT TESTED YET) The group ID for this autoscaler. You can run multiple autoscalers concurrently as long as they have unique group IDs. If you do, take care that the profilePatterns don't overlap or things might get crazy.
 * **scaleContainers (bool: true)**: Allow autoscaler to create, start and remove containers.
 * **profilePattern (regex: `^.*-auto`)**: Only matching profile names are considered for autoscaling.
 * **containerPattern (regex: `^auto.*`)**: Only matching containers are used for profile assignment autoscaling.
@@ -50,6 +50,12 @@ Fuse-autoscaler uses the following parameters in io.fabric8.autoscale PID:
 ## Usage
 
 Add com.github.yuruki/fuse-autoscale bundle to *fabric* profile, or create a new profile with the bundle and assign it on one or more Fabric root containers. Add io.fabric8.autoscale.properties with the autoscale configuration to the profile.
+
+### Maintenance mode
+
+When *scaleContainers* is set to *true*, shutting down containers in order to boot the host cleanly or deleting containers can be difficult because the autoscaler keeps restarting and recreating the containers.
+
+To enter so-called Maintenance mode that allows you to work with container lifecycles set *scaleContainers* to *false* and increase *maxDeviation* to at least *1* to allow profiles to migrate to another container if necessary. You can perform the change with for example *fabric:profile-edit --pid io.fabric8.autoscale/scaleContainers=false --pid io.fabric8.autoscale/maxDeviation=1 your-profile* command. Set *scaleContainers* and *maxDeviation* back to their original values when you are done with the host.
 
 ## Caveats
 

@@ -52,12 +52,13 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
         if (container != null) {
             // Existing container
             setHost(container.getIp(), getRootContainer(container));
+            LOGGER.debug("Added an existing container {} from host {}", id, host.getId());
         } else if (newHost) {
             // New container on a new host
             setHost(UUID.randomUUID().toString()); // Any unique value goes
+            LOGGER.debug("Added a new container {} on a new host {}", id, host.getId());
         } else {
             // New (child) container on an existing host
-            // TODO: 17.2.2016 only if container provider is child otherwise throw ex
             ProfileContainer rootHost = null;
             for (ProfileContainer host : group.getSortedChildren()) {
                 if (((AutoScaledHost) host).hasRootContainer()) {
@@ -67,6 +68,7 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
             }
             if (rootHost != null) {
                 setHost(rootHost);
+                LOGGER.debug("Added a new container {} on an existing host {}", id, host.getId());
             } else {
                 throw new Exception("Can't add a child container. No root containers available.");
             }
@@ -97,8 +99,8 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
         }
     }
 
-    public static AutoScaledContainer newAutoScaledContainer(AutoScaledGroup group, Container container) throws Exception {
-        return new AutoScaledContainer(container, container.getId(), group, false, null);
+    public static AutoScaledContainer newAutoScaledContainer(AutoScaledGroup group, Container container, ContainerFactory containerFactory) throws Exception {
+        return new AutoScaledContainer(container, container.getId(), group, false, containerFactory);
     }
 
     public static AutoScaledContainer newAutoScaledContainer(AutoScaledGroup group, String id, boolean newHost, ContainerFactory containerFactory) throws Exception {
