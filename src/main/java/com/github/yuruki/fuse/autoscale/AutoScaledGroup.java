@@ -40,9 +40,8 @@ public class AutoScaledGroup extends ProfileContainer {
     private final AutoScaledGroupOptions options;
     private final ContainerFactory containerFactory;
 
-    private Integer profileInstances;
-    private Integer requiredHosts;
     private Map<String, ProfileRequirements> profileRequirementsMap = new HashMap<>();
+    private Map<String, ProfileRequirements> prunedProfileRequirementsMap = new HashMap<>();
     private Long maxInstancesPerContainer;
 
     public AutoScaledGroup(final String groupId, final AutoScaledGroupOptions options, final Container[] containers, final ProfileRequirements[] profiles, ContainerFactory containerFactory) throws Exception {
@@ -53,21 +52,28 @@ public class AutoScaledGroup extends ProfileContainer {
     }
 
     private void update(Container[] containers, ProfileRequirements[] profiles) throws Exception {
-        processProfileRequirements(profiles);
+        ProfileRequirementsProcessingResult result = processProfileRequirements(profiles);
         processContainers(containers);
+        scaleContainers(result.profileInstances, result.requiredHosts, options.getAverageInstancesPerContainer());
         applyProfileRequirements();
     }
 
-    private void processProfileRequirements(final ProfileRequirements[] profiles) {
-        profileRequirementsMap.clear(); // Reset profile requirements
-        profileInstances = 0; // Reset total number of required profile instances
-        requiredHosts = 0; // Reset number of hosts needed to satisfy the requirements
+    private void update(ProfileRequirements[] profiles) throws Exception {
+        ProfileRequirementsProcessingResult result = processProfileRequirements(profiles);
+        scaleContainers(result.profileInstances, result.requiredHosts, options.getAverageInstancesPerContainer());
+        applyProfileRequirements();
+    }
 
-        for (ProfileRequirements profile : pruneProfileRequirements(profiles, options.getProfilePattern(), options.getInheritRequirements())) {
+    private ProfileRequirementsProcessingResult processProfileRequirements(final ProfileRequirements[] profiles) {
+        prunedProfileRequirementsMap.clear(); // Reset profile requirements
+        int profileInstances = 0; // Reset total number of required profile instances
+        int requiredHosts = 0; // Reset number of hosts needed to satisfy the requirements
+
+        for (ProfileRequirements profile : pruneProfileRequirements(options.getProfilePattern(), options.getInheritRequirements(), profiles)) {
             if (profile.getMaximumInstancesPerHost() == null) {
                 profile.setMaximumInstancesPerHost(options.getDefaultMaxInstancesPerHost());
             }
-            profileRequirementsMap.put(profile.getProfile(), profile);
+            prunedProfileRequirementsMap.put(profile.getProfile(), profile);
             if (profile.hasMinimumInstances() && profile.getMaximumInstancesPerHost() > 0) {
                 requiredHosts = Math.max(requiredHosts, (profile.getMinimumInstances() + profile.getMaximumInstancesPerHost() - 1) / profile.getMaximumInstancesPerHost());
             }
@@ -77,6 +83,7 @@ public class AutoScaledGroup extends ProfileContainer {
                 profileInstances++; // These are dependencies without minimum instances set
             }
         }
+        return new ProfileRequirementsProcessingResult(profileInstances, requiredHosts);
     }
 
     private void processContainers(Container[] containers) throws Exception {
@@ -96,19 +103,6 @@ public class AutoScaledGroup extends ProfileContainer {
                     AutoScaledContainer.newAutoScaledContainer(this, container, containerFactory);
                 }
             }
-            if (options.getAverageInstancesPerContainer() < 1) {
-                throw new Exception("averageInstancesPerContainer < 1");
-            }
-            // Ceiling of profile instances per container
-            int requiredContainers = 0;
-            if (profileInstances > 0) {
-                requiredContainers = (profileInstances + options.getAverageInstancesPerContainer() - 1) / options.getAverageInstancesPerContainer();
-            }
-            if (requiredContainers < requiredHosts) {
-                requiredContainers = requiredHosts;
-            }
-            // Scale containers
-            scaleContainers(requiredContainers - getGrandChildren().size(), requiredHosts - getChildren().size(), containerFactory);
         } else {
             for (Container container : containers) {
                 if (options.getContainerPattern().reset(container.getId()).matches() && container.isAlive()) {
@@ -121,18 +115,38 @@ public class AutoScaledGroup extends ProfileContainer {
         }
     }
 
+    private static int calculateRequiredContainers(int profileInstances, int requiredHosts, int desiredAverageInstancesPerContainer) {
+        int requiredContainers = 0;
+        if (profileInstances > 0 && desiredAverageInstancesPerContainer > 0) {
+            requiredContainers = (profileInstances + desiredAverageInstancesPerContainer - 1) / desiredAverageInstancesPerContainer;
+        }
+        if (requiredContainers < requiredHosts) {
+            requiredContainers = requiredHosts;
+        }
+        return requiredContainers;
+    }
+
     private void applyProfileRequirements() throws Exception {
         // Calculate and check max profile instances per container
         maxInstancesPerContainer = calculateMaxInstancesPerContainer(getGrandChildren().size(), profileInstances, options.getAverageInstancesPerContainer(), options.getMaxDeviation());
         adjustWithMaxInstancesPerContainer();
 
         // Apply collected profile requirements on the containers
-        for (ProfileRequirements profile : profileRequirementsMap.values()) {
+        for (ProfileRequirements profile : prunedProfileRequirementsMap.values()) {
             addProfile(profile);
         }
     }
 
-    private void scaleContainers(int containerDelta, int hostDelta, ContainerFactory containerFactory) throws Exception {
+    private void scaleContainers(int profileInstances, int requiredHosts, int desiredAverageInstancesPerContainer) throws Exception {
+        if (!options.getScaleContainers()) {
+            return;
+        }
+        if (options.getAverageInstancesPerContainer() < 1) {
+            throw new Exception("averageInstancesPerContainer < 1");
+        }
+        int requiredContainers = calculateRequiredContainers(profileInstances, requiredHosts, desiredAverageInstancesPerContainer);
+        int containerDelta = requiredContainers - getGrandChildren().size();
+        int hostDelta = requiredHosts - getChildren().size();
         LOGGER.debug("Scaling containers with container delta: {}, host delta {}", containerDelta, hostDelta);
         if (containerDelta > 0) {
             // Add containers
@@ -184,7 +198,7 @@ public class AutoScaledGroup extends ProfileContainer {
     }
 
     // Check the profile requirements against profile pattern and check the profile dependencies
-    private static List<ProfileRequirements> pruneProfileRequirements(final ProfileRequirements[] profileRequirements, final Matcher profilePattern, final Boolean inheritRequirements) {
+    private static List<ProfileRequirements> pruneProfileRequirements(final Matcher profilePattern, final Boolean inheritRequirements, final ProfileRequirements... profileRequirements) {
         Map<String, ProfileRequirements> profileRequirementsMap = new HashMap<>();
         for (ProfileRequirements p : profileRequirements) {
             profileRequirementsMap.put(p.getProfile(), p);
@@ -258,6 +272,10 @@ public class AutoScaledGroup extends ProfileContainer {
             average = 0;
         }
         return average + (int)Math.round(Math.abs(maxDeviation) * average);
+    }
+
+    public void addProfile2(ProfileRequirements profile) throws Exception {
+        profileRequirementsMap.put(profile.getProfile(), profile);
     }
 
     @Override
@@ -361,10 +379,20 @@ public class AutoScaledGroup extends ProfileContainer {
     }
 
     public boolean hasRequirements(String profileId) {
-        return profileRequirementsMap.containsKey(profileId);
+        return prunedProfileRequirementsMap.containsKey(profileId);
     }
 
     public boolean matchesProfilePattern(String profileId) {
         return options.getProfilePattern().reset(profileId).matches();
+    }
+
+    private class ProfileRequirementsProcessingResult {
+        public final int profileInstances;
+        public final int requiredHosts;
+
+        public ProfileRequirementsProcessingResult(int profileInstances, int requiredHosts) {
+            this.profileInstances = profileInstances;
+            this.requiredHosts = requiredHosts;
+        }
     }
 }
