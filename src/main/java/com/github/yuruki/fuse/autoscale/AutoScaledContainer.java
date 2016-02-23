@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.regex.Matcher;
 
 import io.fabric8.api.Container;
 import io.fabric8.api.Profile;
@@ -36,7 +35,6 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
 
     private final Container container;
     private final Map<String, Boolean> profiles = new HashMap<>();
-    private final Matcher profilePattern;
     private final AutoScaledGroup group;
     private final ContainerFactory containerFactory;
 
@@ -45,7 +43,6 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
     private AutoScaledContainer(Container container, String id, AutoScaledGroup group, boolean newHost, ContainerFactory containerFactory) throws Exception {
         this.container = container;
         this.id = id;
-        this.profilePattern = group.getProfilePattern();
         this.group = group;
         this.containerFactory = containerFactory;
 
@@ -77,8 +74,10 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
         // Collect current profiles
         if (container != null) {
             for (Profile profile : Arrays.asList(container.getProfiles())) {
-                if (profilePattern.reset(profile.getId()).matches()) {
-                    profiles.put(profile.getId(), true);
+                if (group.hasRequirements(profile.getId())) {
+                    profiles.put(profile.getId(), true); // Profile with requirements. Marked as already assigned.
+                } else if (group.matchesProfilePattern(profile.getId())) {
+                    profiles.put(profile.getId(), false); // Matched profile with no requirements. Marked as not assigned.
                 } else if (removable) {
                     removable = false; // Having unmatched profiles on the container means we can't remove it
                 }
@@ -200,19 +199,11 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
             }
         }
 
-        // Clean up matching profiles that have no requirements
-        for (String profile : currentProfiles) {
-            if (profilePattern.reset(profile).matches() && !hasProfile(profile)) {
-                removeProfile(profile);
-            }
-        }
-
         // Find the changes
         Set<String> resultSet = new HashSet<>(currentProfiles);
         for (Map.Entry<String, Boolean> entry : profiles.entrySet()) {
             final String profile = entry.getKey();
-            final Boolean assigned = entry.getValue();
-            if (assigned) {
+            if (entry.getValue()) {
                 resultSet.add(profile);
             } else {
                 resultSet.remove(profile);

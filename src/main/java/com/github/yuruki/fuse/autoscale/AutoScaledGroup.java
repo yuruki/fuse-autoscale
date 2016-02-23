@@ -42,7 +42,7 @@ public class AutoScaledGroup extends ProfileContainer {
 
     private Integer profileInstances;
     private Integer requiredHosts;
-    private Set<ProfileRequirements> profileRequirements = new HashSet<>();
+    private Map<String, ProfileRequirements> profileRequirementsMap = new HashMap<>();
     private Long maxInstancesPerContainer;
 
     public AutoScaledGroup(final String groupId, final AutoScaledGroupOptions options, final Container[] containers, final ProfileRequirements[] profiles, ContainerFactory containerFactory) throws Exception {
@@ -59,7 +59,7 @@ public class AutoScaledGroup extends ProfileContainer {
     }
 
     private void processProfileRequirements(final ProfileRequirements[] profiles) {
-        profileRequirements.clear(); // Reset profile requirements
+        profileRequirementsMap.clear(); // Reset profile requirements
         profileInstances = 0; // Reset total number of required profile instances
         requiredHosts = 1; // Reset number of hosts needed to satisfy the requirements
 
@@ -67,7 +67,7 @@ public class AutoScaledGroup extends ProfileContainer {
             if (profile.getMaximumInstancesPerHost() == null) {
                 profile.setMaximumInstancesPerHost(options.getDefaultMaxInstancesPerHost());
             }
-            profileRequirements.add(profile);
+            profileRequirementsMap.put(profile.getProfile(), profile);
             if (profile.hasMinimumInstances() && profile.getMaximumInstancesPerHost() > 0) {
                 requiredHosts = Math.max(requiredHosts, (profile.getMinimumInstances() + profile.getMaximumInstancesPerHost() - 1) / profile.getMaximumInstancesPerHost());
             }
@@ -124,7 +124,7 @@ public class AutoScaledGroup extends ProfileContainer {
         adjustWithMaxInstancesPerContainer();
 
         // Apply collected profile requirements on the containers
-        for (ProfileRequirements profile : profileRequirements) {
+        for (ProfileRequirements profile : profileRequirementsMap.values()) {
             addProfile(profile);
         }
     }
@@ -325,10 +325,6 @@ public class AutoScaledGroup extends ProfileContainer {
         }
     }
 
-    public Matcher getProfilePattern() {
-        return options.getProfilePattern();
-    }
-
     public long getMaxInstancesPerContainer() {
         return maxInstancesPerContainer;
     }
@@ -359,5 +355,13 @@ public class AutoScaledGroup extends ProfileContainer {
 
     public AutoScaledGroupOptions getOptions() {
         return options;
+    }
+
+    public boolean hasRequirements(String profileId) {
+        return profileRequirementsMap.containsKey(profileId);
+    }
+
+    public boolean matchesProfilePattern(String profileId) {
+        return options.getProfilePattern().reset(profileId).matches();
     }
 }
