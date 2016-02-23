@@ -49,7 +49,7 @@ Fuse-autoscaler uses the following parameters in io.fabric8.autoscale PID:
 
 ## Usage
 
-Add com.github.yuruki/fuse-autoscale bundle to *fabric* profile, or create a new profile with the bundle and assign it on one or more Fabric root containers. Add io.fabric8.autoscale.properties with the autoscale configuration to the profile.
+Create a new profile, add com.github.yuruki/fuse-autoscale bundle to it and add *fabric* profile as a parent. Then assign your profile on one or more Fabric root containers. Add io.fabric8.autoscale.properties with the autoscale configuration to the profile.
 
 ### Maintenance mode
 
