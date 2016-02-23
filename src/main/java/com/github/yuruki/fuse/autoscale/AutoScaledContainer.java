@@ -78,7 +78,7 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
                     profiles.put(profile.getId(), true); // Profile with requirements. Marked as already assigned.
                 } else if (group.matchesProfilePattern(profile.getId())) {
                     profiles.put(profile.getId(), false); // Matched profile with no requirements. Marked as not assigned.
-                } else if (removable) {
+                } else if (!profile.getId().equals("default") && removable) {
                     removable = false; // Having unmatched profiles on the container means we can't remove it
                 }
             }

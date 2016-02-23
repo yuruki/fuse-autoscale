@@ -61,7 +61,7 @@ public class AutoScaledGroup extends ProfileContainer {
     private void processProfileRequirements(final ProfileRequirements[] profiles) {
         profileRequirementsMap.clear(); // Reset profile requirements
         profileInstances = 0; // Reset total number of required profile instances
-        requiredHosts = 1; // Reset number of hosts needed to satisfy the requirements
+        requiredHosts = 0; // Reset number of hosts needed to satisfy the requirements
 
         for (ProfileRequirements profile : pruneProfileRequirements(profiles, options.getProfilePattern(), options.getInheritRequirements())) {
             if (profile.getMaximumInstancesPerHost() == null) {
@@ -100,7 +100,10 @@ public class AutoScaledGroup extends ProfileContainer {
                 throw new Exception("averageInstancesPerContainer < 1");
             }
             // Ceiling of profile instances per container
-            int requiredContainers = (profileInstances + options.getAverageInstancesPerContainer() - 1) / options.getAverageInstancesPerContainer();
+            int requiredContainers = 0;
+            if (profileInstances > 0) {
+                requiredContainers = (profileInstances + options.getAverageInstancesPerContainer() - 1) / options.getAverageInstancesPerContainer();
+            }
             if (requiredContainers < requiredHosts) {
                 requiredContainers = requiredHosts;
             }
