@@ -74,7 +74,7 @@ public final class AutoScaleController extends AbstractComponent implements Grou
     @Property(value = AutoScaledGroupOptions.PROFILE_PATTERN_DEFAULT, label = "Profile name pattern", description = "Profiles matching this regex will be autoscaled.")
     private static final String PROFILE_PATTERN = "profilePattern";
     private Matcher profilePattern;
-    @Property(value = AutoScaledGroupOptions.CONTAINER_PATTERN_DEFAULT, label = "Container name pattern", description = "Containers matching this regex will be use for assignment autoscaling.")
+    @Property(value = AutoScaledGroupOptions.CONTAINER_PATTERN_DEFAULT, label = "Container name pattern", description = "Containers matching this regex will be used for profile assignment autoscaling.")
     private static final String CONTAINER_PATTERN = "containerPattern";
     private Matcher containerPattern;
     @Property(value = AutoScaledGroupOptions.CONTAINER_PREFIX_DEFAULT, label = "Container name prefix for new containers", description = "New containers will be created with this prefix and an index.")
@@ -95,9 +95,9 @@ public final class AutoScaleController extends AbstractComponent implements Grou
     @Property(value = AutoScaledGroupOptions.INHERIT_REQUIREMENTS_DEFAULT, label = "Inherit requirements", description = "Profile dependencies will inherit their requirements from parent if their requirements are not set.")
     private static final String INHERIT_REQUIREMENTS = "inheritRequirements";
     private Boolean inheritRequirements;
-    @Property(value = AutoScaledGroupOptions.AVERAGE_ASSIGNMENTS_PER_CONTAINER_DEFAULT, label = "Desired average assignment count per container", description = "Desired average profile assignment count per container. Negative value equals no value.")
-    private static final String AVERAGE_ASSIGNMENTS_PER_CONTAINER = "averageAssignmentsPerContainer";
-    private Integer averageAssignmentsPerContainer;
+    @Property(value = AutoScaledGroupOptions.AVERAGE_INSTANCES_PER_CONTAINER_DEFAULT, label = "Desired average profile instance count per container", description = "Desired average profile instance count per container. Negative value equals no value.")
+    private static final String AVERAGE_INSTANCES_PER_CONTAINER = "averageInstancesPerContainer";
+    private Integer averageInstancesPerContainer;
     @Property(value = AutoScaledGroupOptions.IGNORE_ERRORS_DEFAULT, label = "Don't cancel auto-scaling on error", description = "When enabled, errors will be logged but the auto-scaling will be performed regardless.")
     private static final String IGNORE_ERRORS = "ignoreErrors";
     private Boolean ignoreErrors;
@@ -130,7 +130,7 @@ public final class AutoScaleController extends AbstractComponent implements Grou
         this.minContainerCount = Integer.parseInt(properties.get(MIN_CONTAINER_COUNT));
         this.maxDeviation = Double.parseDouble(properties.get(MAX_DEVIATION)) >= 0 ? Double.parseDouble(properties.get(MAX_DEVIATION)) : 1;
         this.inheritRequirements = Boolean.parseBoolean(properties.get(INHERIT_REQUIREMENTS));
-        this.averageAssignmentsPerContainer = Integer.parseInt(properties.get(AVERAGE_ASSIGNMENTS_PER_CONTAINER));
+        this.averageInstancesPerContainer = Integer.parseInt(properties.get(AVERAGE_INSTANCES_PER_CONTAINER));
         this.ignoreErrors = Boolean.parseBoolean(properties.get(IGNORE_ERRORS));
         this.maxContainersPerHost = Integer.parseInt(properties.get(MAX_CONTAINERS_PER_HOST));
         CuratorFramework curator = this.curator.get();
@@ -239,7 +239,7 @@ public final class AutoScaleController extends AbstractComponent implements Grou
                 scaleContainers,
                 inheritRequirements,
                 maxDeviation,
-                averageAssignmentsPerContainer,
+                averageInstancesPerContainer,
                 containerPrefix,
                 minContainerCount,
                 defaultMaximumInstancesPerHost,

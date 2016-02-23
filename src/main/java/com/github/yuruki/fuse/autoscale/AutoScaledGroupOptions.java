@@ -30,8 +30,8 @@ public class AutoScaledGroupOptions {
     public static final String INHERIT_REQUIREMENTS_DEFAULT = "true";
     private Double maxDeviation = 1.0;
     public static final String MAX_DEVIATION_DEFAULT = "1.0";
-    private Integer averageAssignmentsPerContainer = -1;
-    public static final String AVERAGE_ASSIGNMENTS_PER_CONTAINER_DEFAULT = "-1";
+    private Integer averageInstancesPerContainer = -1;
+    public static final String AVERAGE_INSTANCES_PER_CONTAINER_DEFAULT = "-1";
     private String containerPrefix = "auto";
     public static final String CONTAINER_PREFIX_DEFAULT = "auto";
     private Integer minContainerCount = 0;
@@ -51,7 +51,7 @@ public class AutoScaledGroupOptions {
         Boolean scaleContainers,
         Boolean inheritRequirements,
         Double maxDeviation,
-        Integer averageAssignmentsPerContainer,
+        Integer averageInstancesPerContainer,
         String containerPrefix,
         Integer minContainerCount,
         Integer defaultMaxInstancesPerHost,
@@ -62,7 +62,7 @@ public class AutoScaledGroupOptions {
         this.scaleContainers = scaleContainers;
         this.inheritRequirements = inheritRequirements;
         this.maxDeviation = maxDeviation;
-        this.averageAssignmentsPerContainer = averageAssignmentsPerContainer;
+        this.averageInstancesPerContainer = averageInstancesPerContainer;
         this.containerPrefix = containerPrefix;
         this.minContainerCount = minContainerCount;
         this.defaultMaxInstancesPerHost = defaultMaxInstancesPerHost;
@@ -95,8 +95,8 @@ public class AutoScaledGroupOptions {
         return this;
     }
 
-    public AutoScaledGroupOptions averageAssignmentsPerContainer(Integer averageAssignmentsPerContainer) {
-        setAverageAssignmentsPerContainer(averageAssignmentsPerContainer);
+    public AutoScaledGroupOptions averageInstancesPerContainer(Integer averageInstancesPerContainer) {
+        setAverageInstancesPerContainer(averageInstancesPerContainer);
         return this;
     }
 
@@ -165,12 +165,12 @@ public class AutoScaledGroupOptions {
         this.maxDeviation = maxDeviation;
     }
 
-    public Integer getAverageAssignmentsPerContainer() {
-        return averageAssignmentsPerContainer;
+    public Integer getAverageInstancesPerContainer() {
+        return averageInstancesPerContainer;
     }
 
-    public void setAverageAssignmentsPerContainer(Integer averageAssignmentsPerContainer) {
-        this.averageAssignmentsPerContainer = averageAssignmentsPerContainer;
+    public void setAverageInstancesPerContainer(Integer averageInstancesPerContainer) {
+        this.averageInstancesPerContainer = averageInstancesPerContainer;
     }
 
     public String getContainerPrefix() {

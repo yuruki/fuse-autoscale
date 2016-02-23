@@ -62,7 +62,7 @@ public class ProfileContainerTest {
             .profilePattern(Pattern.compile("^.*-auto$").matcher(""))
             .inheritRequirements(true)
             .defaultMaxInstancesPerHost(1)
-            .averageAssignmentsPerContainer(10);
+            .averageInstancesPerContainer(10);
 
         // Set up testables
         autoScaledGroup = new AutoScaledGroup("test", options, containerList.toArray(new Container[containerList.size()]), profileRequirements.toArray(new ProfileRequirements[profileRequirements.size()]), new ContainerFactory(fabricService));

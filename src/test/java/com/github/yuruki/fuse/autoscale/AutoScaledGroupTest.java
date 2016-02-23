@@ -186,7 +186,7 @@ public class AutoScaledGroupTest {
             .inheritRequirements(true)
             .containerPrefix("auto")
             .defaultMaxInstancesPerHost(1)
-            .averageAssignmentsPerContainer(10);
+            .averageInstancesPerContainer(10);
 
         // Set up auto-scaled group
         assertEquals("Warnings or errors logged too early", 0, appender.getLog().size());
@@ -251,7 +251,7 @@ public class AutoScaledGroupTest {
             .inheritRequirements(true)
             .containerPrefix("auto")
             .defaultMaxInstancesPerHost(1)
-            .averageAssignmentsPerContainer(10);
+            .averageInstancesPerContainer(10);
 
         // Set up auto-scaled group
         assertEquals("Warnings or errors logged too early", 0, appender.getLog().size());
@@ -305,7 +305,7 @@ public class AutoScaledGroupTest {
             .containerPrefix("auto")
             .defaultMaxInstancesPerHost(1)
             .maxDeviation(0.0)
-            .averageAssignmentsPerContainer(1);
+            .averageInstancesPerContainer(1);
 
         // Set up auto-scaled group
         assertEquals("Warnings or errors logged too early", 0, appender.getLog().size());

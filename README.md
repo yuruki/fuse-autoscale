@@ -12,12 +12,12 @@ Not using autoscale we might create more containers with smaller heaps and sprea
 
 ## Solution
 
-Instead of fabric8's current autoscale concept focusing on the containers and applying one profile per container we should focus on the profiles. Profile requirements define the desired running state with the instance limits and dependencies. With the combination of maxDeviation and averageAssignmentsPerContainer parameters we can essentially define the shape of an elastic Fabric. Fuse-autoscaler component implements this profile-centric approach.
+Instead of fabric8's current autoscale concept focusing on the containers and applying one profile per container we should focus on the profiles. Profile requirements define the desired running state with the instance limits and dependencies. With the combination of maxDeviation and averageInstancesPerContainer parameters we can essentially define the shape of an elastic Fabric. Fuse-autoscaler component implements this profile-centric approach.
 
 Example config:
 
 * scaleContainers = true
-* averageAssignmentsPerContainer = 50
+* averageInstancesPerContainer = 50
 * profilePattern = ^.*-auto$
 * containerPattern = ^auto.*$
 * containerPrefix = auto
@@ -27,7 +27,7 @@ Scenario:
 
 User has a thousand profiles with their requirements defined. User has the static part of the Fabric set up with the Zookeeper ensemble, maybe the brokers and whatever we don't want to scale. Then we add the autoscaler to the mix with the above configuration.
 
-The autoscaler will start apply the assignments to containers matching the container pattern, adding them if there's not enough, starting existing ones if they are not started and removing ones that are can be removed safely and are not neede.
+The autoscaler will adjust profile assignments on containers matching the container pattern, adding containers if there's not enough, starting existing containers if they are not started and removing containers that are can be removed safely and are not needed.
 
 ## Configuration
 
@@ -43,7 +43,7 @@ Fuse-autoscaler uses the following parameters in io.fabric8.autoscale PID:
 * **minContainerCount (int: 0)**: Minimum number of applicable containers on which autoscaling can be performed.
 * **maxDeviation (double: 1.0, >= 0)**: If a container has more than x + maximumDeviation * x profiles assigned, the excess profiles will be reassigned. x = matched profile count / applicable container count, rounded up.
 * **inheritRequirements (bool: true)**: Profile dependencies will inherit their requirements from the parent if their requirements are not set. Inherited requirements are transient and won't change your configured requirements.
-* **averageAssignmentsPerContainer (int: -1)**: The desired average number of profile assignments per container when scaling with containers.
+* **averageInstancesPerContainer (int: -1)**: The desired average number of profile instances per container when scaling with containers.
 * **maxContainersPerHost (int: 3)**: Maximum allowed number of autoscaled containers per host. Set this to match the resources of your hosts.
 * **ignoreErrors (bool: true)**: Perform autoscaling even when all the requirements couldn't be satisfied.
 
@@ -71,7 +71,7 @@ io.fabric8.autoscale/
 
 With this configuration the autoscaler will not create, start or remove any containers. Instead it will try to assign all matched profiles according to their requirements on applicable containers. The autoscaler will consider profiles that end with "-dev" and containers whose name starts with "camel". By default the maximum profile instances per host are limited to 1.
 
-The autoscaler will make an effort to spread the profiles evenly across the applicable containers. If the requirements change, the autoscaler will adjust the assignments accordingly.
+The autoscaler will make an effort to spread the profiles evenly across the applicable containers. If the requirements change, the autoscaler will adjust the profile assignments accordingly.
 
 Using a different profilePattern for test and production environments you can control what is running where by adjusting the profile requirements. In this kind of setup the autoscaled profiles for dev, test and prod would point to the same profile with the actual implementation in it.
 

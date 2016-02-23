@@ -43,7 +43,7 @@ public class AutoScaledGroup extends ProfileContainer {
     private Integer profileInstances;
     private Integer requiredHosts;
     private Set<ProfileRequirements> profileRequirements = new HashSet<>();
-    private Long maxAssignmentsPerContainer;
+    private Long maxInstancesPerContainer;
 
     public AutoScaledGroup(final String groupId, final AutoScaledGroupOptions options, final Container[] containers, final ProfileRequirements[] profiles, ContainerFactory containerFactory) throws Exception {
         this.id = groupId;
@@ -96,11 +96,11 @@ public class AutoScaledGroup extends ProfileContainer {
                     AutoScaledContainer.newAutoScaledContainer(this, container, containerFactory);
                 }
             }
-            if (options.getAverageAssignmentsPerContainer() < 1) {
-                throw new Exception("averageAssignmentsPerContainer < 1");
+            if (options.getAverageInstancesPerContainer() < 1) {
+                throw new Exception("averageInstancesPerContainer < 1");
             }
             // Ceiling of profile instances per container
-            int requiredContainers = (profileInstances + options.getAverageAssignmentsPerContainer() - 1) / options.getAverageAssignmentsPerContainer();
+            int requiredContainers = (profileInstances + options.getAverageInstancesPerContainer() - 1) / options.getAverageInstancesPerContainer();
             if (requiredContainers < requiredHosts) {
                 requiredContainers = requiredHosts;
             }
@@ -120,7 +120,7 @@ public class AutoScaledGroup extends ProfileContainer {
 
     private void applyProfileRequirements() throws Exception {
         // Calculate and check max profile instances per container
-        maxAssignmentsPerContainer = calculateMaxAssignmentsPerContainer(getGrandChildren().size(), profileInstances, options.getAverageAssignmentsPerContainer(), options.getMaxDeviation());
+        maxInstancesPerContainer = calculateMaxInstancesPerContainer(getGrandChildren().size(), profileInstances, options.getAverageInstancesPerContainer(), options.getMaxDeviation());
         adjustWithMaxInstancesPerContainer();
 
         // Apply collected profile requirements on the containers
@@ -246,12 +246,12 @@ public class AutoScaledGroup extends ProfileContainer {
         return prunedProfileRequirements;
     }
 
-    // Return the preferred max profile assignment count for a single container
-    private static long calculateMaxAssignmentsPerContainer(int containers, int profileInstances, int desiredAveragePerContainer, double maxDeviation) {
-        long average = desiredAveragePerContainer;
-        if (desiredAveragePerContainer < 0 && containers > 0) {
+    // Return the preferred max profile instance count for a single container
+    private static long calculateMaxInstancesPerContainer(int containers, int profileInstances, int averageInstancesPerContainer, double maxDeviation) {
+        long average = averageInstancesPerContainer;
+        if (averageInstancesPerContainer < 0 && containers > 0) {
             average = (profileInstances + containers - 1) / containers; // Ceiling of average
-        } else if (desiredAveragePerContainer < 0) {
+        } else if (averageInstancesPerContainer < 0) {
             average = 0;
         }
         return average + (int)Math.round(Math.abs(maxDeviation) * average);
@@ -286,7 +286,7 @@ public class AutoScaledGroup extends ProfileContainer {
 
     private void adjustWithMaxInstancesPerContainer() {
         for (ProfileContainer container : getGrandChildren()) {
-            removeProfiles(container.getProfileCount() - maxAssignmentsPerContainer);
+            removeProfiles(container.getProfileCount() - maxInstancesPerContainer);
         }
     }
 
@@ -329,11 +329,15 @@ public class AutoScaledGroup extends ProfileContainer {
         return options.getProfilePattern();
     }
 
-    public long getMaxAssignmentsPerContainer() {
-        return maxAssignmentsPerContainer;
+    public long getMaxInstancesPerContainer() {
+        return maxInstancesPerContainer;
     }
 
     public void apply() {
+        apply(0);
+    }
+
+    public void apply(long maxWaitInMillis) {
         Set<ProfileContainer> containers = new HashSet<>(getEveryGrandChild());
         if (containers.isEmpty()) {
             LOGGER.debug("No changes to apply");
@@ -344,19 +348,12 @@ public class AutoScaledGroup extends ProfileContainer {
             taskExecutor.execute((AutoScaledContainer) container);
         }
         taskExecutor.shutdown();
-    }
-
-    public void apply(long maxWaitInMillis) {
-        Set<ProfileContainer> containers = new HashSet<>(getEveryGrandChild());
-        ExecutorService taskExecutor = Executors.newFixedThreadPool(containers.size());
-        for (ProfileContainer container : containers) {
-            taskExecutor.execute((AutoScaledContainer) container);
-        }
-        taskExecutor.shutdown();
-        try {
-            taskExecutor.awaitTermination(maxWaitInMillis, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace(); // Ignored
+        if (maxWaitInMillis > 0) {
+            try {
+                taskExecutor.awaitTermination(maxWaitInMillis, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace(); // Ignored
+            }
         }
     }
 

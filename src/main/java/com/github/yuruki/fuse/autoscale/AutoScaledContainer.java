@@ -163,8 +163,8 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
     public void addProfile(ProfileRequirements profile) throws Exception {
         if (removed){
             throw new Exception("Can't assign " + profile.getProfile() + " to container marked as removed (" + id + ").");
-        } else if (getProfileCount() >= group.getMaxAssignmentsPerContainer()) {
-            throw new Exception("Can't assign " + profile.getProfile() + " to container " + id + ", due to maxInstancesPerContainer (" + group.getMaxAssignmentsPerContainer() + ").");
+        } else if (getProfileCount() >= group.getMaxInstancesPerContainer()) {
+            throw new Exception("Can't assign " + profile.getProfile() + " to container " + id + ", due to maxInstancesPerContainer (" + group.getMaxInstancesPerContainer() + ").");
         } else if (profile.getMaximumInstancesPerHost() != null && host.getProfileCount(profile) >= profile.getMaximumInstancesPerHost()) {
             throw new Exception("Can't assign " + profile.getProfile() + " to container " + id + ", due to maxInstancesPerHost (" + profile.getMaximumInstancesPerHost() + ").");
         } else if (profile.getMaximumInstances() != null && group.getProfileCount(profile) >= profile.getMaximumInstances()) {
