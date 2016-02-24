@@ -87,15 +87,15 @@ public abstract class ProfileContainer {
         }
     }
 
-    final public void removeProfile(Profile profile) {
+    final public void removeProfile(Profile profile) throws Exception {
         removeProfile(profile.getId());
     }
 
-    final public void removeProfile(ProfileRequirements profile) {
+    final public void removeProfile(ProfileRequirements profile) throws Exception {
         removeProfile(profile.getProfile());
     }
 
-    public void removeProfile(String profile) {
+    public void removeProfile(String profile) throws Exception {
         for (ProfileContainer child : getChildren()) {
             if (child.hasProfile(profile)) {
                 child.removeProfile(profile);
@@ -103,11 +103,11 @@ public abstract class ProfileContainer {
         }
     }
 
-    final public void removeProfile(ProfileRequirements profile, int count) {
+    final public void removeProfile(ProfileRequirements profile, int count) throws Exception {
         removeProfile(profile.getProfile(), count);
     }
 
-    public void removeProfile(String profile, int count) {
+    public void removeProfile(String profile, int count) throws Exception {
         for (int i = 0; i < count; i++) {
             List<ProfileContainer> children = new LinkedList<>(getSortedChildren());
             Collections.reverse(children);
