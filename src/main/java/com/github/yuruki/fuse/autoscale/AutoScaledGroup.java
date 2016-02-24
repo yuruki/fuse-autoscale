@@ -52,41 +52,23 @@ public class AutoScaledGroup extends ProfileContainer {
         this.id = groupId;
         this.options = options;
         this.containerFactory = containerFactory;
-        update(profiles, containers);
+        updateGroup(profiles, containers);
         applyProfileRequirements();
     }
 
-    private void update(ProfileRequirements[] profiles, Container[] containers) throws Exception {
-        Map<String, ProfileRequirements> newProfileRequirementsMap = new HashMap<>();
-        for (ProfileRequirements profile : profiles) {
-            newProfileRequirementsMap.put(profile.getProfile(), profile);
-        }
-        profileRequirementsMap = newProfileRequirementsMap;
-        containerList = Arrays.asList(containers);
-        ProfileRequirementsProcessingResult result = processProfileRequirements(options, profiles);
-        prunedProfileRequirementsMap = result.profileRequirementsMap;
-        profileInstances = result.profileInstances;
-        requiredHosts = result.requiredHosts;
-        processContainers(options, containers);
+    private void updateGroup(ProfileRequirements[] profiles, Container[] containers) throws Exception {
+        setProfileRequirements(profiles);
+        setContainers(containers);
         scaleContainers(profileInstances, requiredHosts, options.getAverageInstancesPerContainer());
     }
 
-    private void update(Container[] containers) throws Exception {
-        containerList = Arrays.asList(containers);
-        processContainers(options, containers);
+    private void updateGroup(Container[] containers) throws Exception {
+        setContainers(containers);
         scaleContainers(profileInstances, requiredHosts, options.getAverageInstancesPerContainer());
     }
 
-    private void update(ProfileRequirements[] profiles) throws Exception {
-        Map<String, ProfileRequirements> newProfileRequirementsMap = new HashMap<>();
-        for (ProfileRequirements profile : profiles) {
-            newProfileRequirementsMap.put(profile.getProfile(), profile);
-        }
-        profileRequirementsMap = newProfileRequirementsMap;
-        ProfileRequirementsProcessingResult result = processProfileRequirements(options, profiles);
-        prunedProfileRequirementsMap = result.profileRequirementsMap;
-        profileInstances = result.profileInstances;
-        requiredHosts = result.requiredHosts;
+    private void updateGroup(ProfileRequirements[] profiles) throws Exception {
+        setProfileRequirements(profiles);
         scaleContainers(profileInstances, requiredHosts, options.getAverageInstancesPerContainer());
     }
 
@@ -136,7 +118,7 @@ public class AutoScaledGroup extends ProfileContainer {
                 }
             }
             if (getGrandChildren().size() < options.getMinContainerCount()) {
-                throw new Exception("Not enough containers (" + getGrandChildren().size() + "), " + options.getMinContainerCount() + " required");
+                throw new Exception("Not enough containers available (" + getGrandChildren().size() + "), " + options.getMinContainerCount() + " required");
             }
         }
     }
@@ -322,7 +304,7 @@ public class AutoScaledGroup extends ProfileContainer {
     @Override
     public void addProfile(ProfileRequirements profile) throws Exception {
         profileRequirementsMap.put(profile.getProfile(), profile);
-        update(profileRequirementsMap.values().toArray(new ProfileRequirements[profileRequirementsMap.size()]));
+        updateGroup(profileRequirementsMap.values().toArray(new ProfileRequirements[profileRequirementsMap.size()]));
         applyProfileRequirements();
     }
 
@@ -376,7 +358,7 @@ public class AutoScaledGroup extends ProfileContainer {
     @Override
     public void removeProfile(String profile) throws Exception {
         profileRequirementsMap.remove(profile);
-        update(profileRequirementsMap.values().toArray(new ProfileRequirements[prunedProfileRequirementsMap.size()]), containerList.toArray(new Container[containerList.size()]));
+        updateGroup(profileRequirementsMap.values().toArray(new ProfileRequirements[prunedProfileRequirementsMap.size()]), containerList.toArray(new Container[containerList.size()]));
         applyProfileRequirements();
     }
 
@@ -430,5 +412,22 @@ public class AutoScaledGroup extends ProfileContainer {
             this.profileInstances = profileInstances;
             this.requiredHosts = requiredHosts;
         }
+    }
+
+    private void setProfileRequirements(ProfileRequirements[] profileRequirements) {
+        Map<String, ProfileRequirements> newProfileRequirementsMap = new HashMap<>();
+        for (ProfileRequirements profile : profileRequirements) {
+            newProfileRequirementsMap.put(profile.getProfile(), profile);
+        }
+        profileRequirementsMap = newProfileRequirementsMap;
+        ProfileRequirementsProcessingResult result = processProfileRequirements(options, profileRequirements);
+        prunedProfileRequirementsMap = result.profileRequirementsMap;
+        profileInstances = result.profileInstances;
+        requiredHosts = result.requiredHosts;
+    }
+
+    private void setContainers(Container[] containers) throws Exception {
+        containerList = Arrays.asList(containers);
+        processContainers(options, containers);
     }
 }
