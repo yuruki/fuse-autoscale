@@ -2,17 +2,17 @@
 
 ## Background
 
-We are running Red Hat JBoss Fuse 6.2.1 (fabric8 1.2) with Apache Karaf on 3 and 5 node Fabric ensembles. We have one CamelContext per bundle and one Fabric profile per bundle. This adds up to over 100 of CamelContexts, bundles and profiles each.
+We are running Red Hat JBoss Fuse 6.2.1 (fabric8 1.2) with Apache Karaf on 3 to 5 node Fabric ensembles. We have one CamelContext per bundle and one Fabric profile per bundle. This adds up to over 100 of CamelContexts, bundles and profiles each.
 
 The problem we are facing is scaling. The bundles keep piling up but they are still running on one Karaf container per host. The JVM heap size is getting a bit unwieldy.
 
-The autoscale feature on fabric8 uses an approach of one container per profile, which practically means that we would have to create a smaller number of high level profiles where we add our profiles as parents, by hand, while making sure each profile is added exactly once (static port allocations in our bundles dictate this). Also, we don't want our container layout to change automatically.
+The autoscale feature on fabric8 (fabric-autoscale) uses an approach of one container per profile. In practice that means we would have to create a smaller number of high level profiles and add our profiles as parents in them, by hand, while making sure each profile is assigned exactly once per host (static port allocations in our bundles dictate this). Also, we don't want our container layout to change automatically and without limits.
 
-Not using autoscale we might create more containers with smaller heaps and spread the profiles on them, but assigning the profiles is tedious and error-prone as explained above.
+Not using fabric-autoscale we would have to create more containers with smaller heaps and spread the profiles on them, but assigning the profiles is tedious and error-prone as explained above.
 
 ## Solution
 
-Instead of fabric8's current autoscale concept focusing on the containers and applying one profile per container we should focus on the profiles. Profile requirements define the desired running state with the instance limits and dependencies. With the combination of maxDeviation and averageInstancesPerContainer parameters we can essentially define the shape of an elastic Fabric. Fuse-autoscaler component implements this profile-centric approach.
+Instead of fabric-autoscale's concept of focusing on the containers and applying one profile per container we should focus on the profiles. Profile requirements define the desired running state with the instance limits and dependencies. Adding maxDeviation and averageInstancesPerContainer parameters to autoscaler we can essentially define the shape of an elastic Fabric. Fuse-autoscaler component implements this profile-centric approach.
 
 Example config:
 
@@ -27,7 +27,7 @@ Scenario:
 
 User has a thousand profiles with their requirements defined. User has the static part of the Fabric set up with the Zookeeper ensemble, maybe the brokers and whatever we don't want to scale. Then we add the autoscaler to the mix with the above configuration.
 
-The autoscaler will adjust profile assignments on containers matching the container pattern, adding containers if there's not enough, starting existing containers if they are not started and removing containers that are can be removed safely and are not needed.
+The autoscaler will adjust matching profile assignments on containers matching the container pattern, adding containers if there's not enough, starting existing containers if they are not started and removing containers that are can be removed safely and are not needed.
 
 ## Configuration
 
@@ -55,7 +55,7 @@ Create a new profile, add com.github.yuruki/fuse-autoscale bundle to it and add 
 
 When *scaleContainers* is set to *true*, deleting containers or shutting them down in order to reboot the host cleanly can be difficult because the autoscaler keeps restarting and recreating the containers.
 
-To enter so-called Maintenance mode which allows you to work with container lifecycle manually, set *scaleContainers* to *false* and increase *maxDeviation* to *1* (depends on your setup) to allow profiles to migrate to other containers. You can perform the change with for example *fabric:profile-edit --pid io.fabric8.autoscale/scaleContainers=false --pid io.fabric8.autoscale/maxDeviation=1 your-profile* command. Set *scaleContainers* and *maxDeviation* back to their original values when you are done and the host is ready.
+To enter so-called Maintenance mode which allows you to control container lifecycle manually, set *scaleContainers* to *false* and increase *maxDeviation* to *1* (depends on your setup) to allow profiles to migrate to other containers. You can perform the change with for example *fabric:profile-edit --pid io.fabric8.autoscale/scaleContainers=false --pid io.fabric8.autoscale/maxDeviation=1 your-profile* command. Set *scaleContainers* and *maxDeviation* back to their original values when you are done and the host is ready.
 
 ## Caveats
 
@@ -69,17 +69,17 @@ io.fabric8.autoscale/
 * containerPattern = ^camel.*$
 * defaultMaxInstancesPerHost = 1
 
-With this configuration the autoscaler will not create, start or remove any containers. Instead it will try to assign all matched profiles according to their requirements on applicable containers. The autoscaler will consider profiles that end with "-dev" and containers whose name starts with "camel". By default the maximum profile instances per host are limited to 1.
+With this configuration the autoscaler will not create, start or remove any containers. Instead it will try to assign matched profiles according to their requirements on applicable running containers. The autoscaler will consider profiles that end with "-dev" and containers whose name starts with "camel". By default the maximum profile instances per host are limited to 1.
 
-The autoscaler will make an effort to spread the profiles evenly across the applicable containers. If the requirements change, the autoscaler will adjust the profile assignments accordingly.
+The autoscaler will make an effort to spread the profiles evenly across the containers. If the requirements change, the autoscaler will adjust the profile assignments accordingly.
 
-Using a different profilePattern for test and production environments you can control what is running where by adjusting the profile requirements. In this kind of setup the autoscaled profiles for dev, test and prod would point to the same profile with the actual implementation in it.
+Using a different profilePattern for test and production environments you can control what is running where solely by adjusting the profile requirements. In this kind of setup the autoscaled profiles for dev, test and prod would point to the same profile with the actual implementation in it.
 
 ## Example 2
 
 io.fabric8.autoscale/
 * scaleContainers = true
-* profilePattern = `^(my-template-.*)|(my-bundle-.*-test)$`
+* profilePattern = `^(my-template-.*)|(my-bundle-.*)$`
 * containerPattern = ^camel.*$
 * containerPrefix = camel
 * maxContainersPerHost = 3
@@ -88,8 +88,6 @@ io.fabric8.autoscale/
 * maxDeviation = 1.0
 * inheritRequirements = true
 
-This is a configuration we will probably use in our UAT environment. The autoscaler will consider profiles that match "my-template-" or "my-bundle-*-test" and assign them on containers starting with "camel".
+This is a configuration we will probably use in our UAT and production environments. The autoscaler will consider profiles that match "my-template-\*" or "my-bundle-\*" and assign them on containers starting with "camel". Container lifecycle will be controlled by the autoscaler.
 
-We don't configure maximum instances per host in the profile requirements so the autoscaler will use the default value of 1.
-
-We will only define the requirements for the profiles that we explicitly want to assign. Profile dependencies defined via dependsOn mechanism will inherit their requirements from their parents. This will keep the profile requirements DRY.
+We won't configure maximum instances per host in the profile requirements; autoscaler will use the default value of 1. We will only define the requirements for the profiles that we explicitly want to assign. Profile dependencies defined via dependsOn mechanism will inherit their requirements from their parents. This will keep the profile requirements DRY.
