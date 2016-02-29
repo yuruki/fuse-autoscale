@@ -36,7 +36,7 @@ public class ContainerFactory {
         builder.jmxUser(service.getZooKeeperUser()).jmxPassword(service.getZookeeperPassword()).zookeeperUrl(service.getZookeeperUrl()).zookeeperPassword(service.getZookeeperPassword());
         builder.number(1).version(rootContainer.getVersionId()).profiles(profiles);
         builder.name(name);
-        builder.jvmOpts(builder.getJvmOpts() + " " + service.getDefaultJvmOptions());
+        builder.jvmOpts(service.getDefaultJvmOptions());
         CreateChildContainerOptions options = builder.build();
         service.createContainers(options);
     }
