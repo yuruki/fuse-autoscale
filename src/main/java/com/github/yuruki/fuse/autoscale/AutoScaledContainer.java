@@ -217,7 +217,12 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
             if (container != null) {
                 List<Profile> profiles = new ArrayList<>();
                 for (String profileId : sortedResult) {
-                    profiles.add(container.getVersion().getProfile(profileId));
+                    Profile profile = container.getVersion().getProfile(profileId);
+                    if (profile != null) {
+                        profiles.add(container.getVersion().getProfile(profileId));
+                    } else {
+                        LOGGER.warn("Profile {} doesn't exist in version {}, can't assign to container {}. This exception is ignored.", profileId, container.getVersionId(), id);
+                    }
                 }
                 // Adjust existing container
                 LOGGER.info("Setting profiles for container {}", container.getId());
