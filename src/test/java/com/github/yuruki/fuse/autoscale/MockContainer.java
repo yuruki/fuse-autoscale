@@ -155,7 +155,11 @@ public class MockContainer implements Container {
 
     @Override
     public List<String> getProfileIds() {
-        return null;
+        List<String> result = new ArrayList<>();
+        for (Profile profile : profileList) {
+            result.add(profile.getId());
+        }
+        return result;
     }
 
     @Override

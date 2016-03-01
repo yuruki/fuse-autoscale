@@ -78,14 +78,14 @@ public class AutoScaledGroupTest {
 
         // Non-matching parts should remain untouched
         List<Profile> otherContainerProfiles = Arrays.asList(otherContainer.getProfiles());
-        assertEquals("otherContainer doesn't have exactly one profile", 1, otherContainerProfiles.size());
         assertTrue("otherContainer doesn't have otherProfile", otherContainerProfiles.contains(otherProfile));
+        assertEquals("otherContainer doesn't have exactly one profile", 1, otherContainerProfiles.size());
 
         // Matching container should now have two profiles
         List<Profile> oneContainerProfiles = Arrays.asList(oneContainer.getProfiles());
-        assertEquals("oneContainer doesn't have exactly two profiles", 2, oneContainerProfiles.size());
         assertTrue("oneContainer doesn't have oneProfile", oneContainerProfiles.contains(oneProfile));
         assertTrue("oneContainer doesn't have min1Profile", oneContainerProfiles.contains(min1Profile));
+        assertEquals("oneContainer doesn't have exactly two profiles", 2, oneContainerProfiles.size());
     }
 
     @Test

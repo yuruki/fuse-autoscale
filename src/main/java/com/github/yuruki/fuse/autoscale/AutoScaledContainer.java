@@ -16,7 +16,6 @@
 package com.github.yuruki.fuse.autoscale;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -72,13 +71,13 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
         }
 
         // Collect current profiles
-        if (container != null) {
-            for (Profile profile : Arrays.asList(container.getProfiles())) {
-                if (group.hasRequirements(profile.getId())) {
-                    profiles.put(profile.getId(), true); // Profile with requirements. Marked as already assigned.
-                } else if (group.matchesProfilePattern(profile.getId())) {
-                    profiles.put(profile.getId(), false); // Matched profile with no requirements. Marked as not assigned.
-                } else if (!profile.getId().equals("default") && removable) {
+        if (container != null && container.getProfileIds() != null) {
+            for (String profileId : container.getProfileIds()) {
+                if (group.hasRequirements(profileId)) {
+                    profiles.put(profileId, true); // Profile with requirements. Marked as already assigned.
+                } else if (group.matchesProfilePattern(profileId)) {
+                    profiles.put(profileId, false); // Matched profile with no requirements. Marked as not assigned.
+                } else if (!profileId.equals("default") && removable) {
                     removable = false; // Having unmatched profiles on the container means we can't remove it
                 }
             }
@@ -193,9 +192,9 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
 
         // Get current profiles for the container
         Set<String> currentProfiles = new HashSet<>();
-        if (container != null) {
-            for (Profile profile : container.getProfiles()) {
-                currentProfiles.add(profile.getId());
+        if (container != null && container.getProfileIds() != null) {
+            for (String profileId : container.getProfileIds()) {
+                currentProfiles.add(profileId);
             }
         }
 
