@@ -185,8 +185,8 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
     public void run() {
         if (container != null && removed) {
             // Remove container
-            LOGGER.debug("Removing container {}", id);
             container.destroy(true);
+            LOGGER.info("Container {} removed", id);
             return;
         }
 
@@ -234,6 +234,7 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
                 // TODO: generalize for any provider
                 try {
                     containerFactory.createChildContainer(id, sortedResult.toArray(new String[sortedResult.size()]), ((AutoScaledHost) host).getRootContainer());
+                    LOGGER.info("Container {} created", id);
                 } catch (Exception e) {
                     LOGGER.error("Couldn't create child container {}. This exception is ignored.", id, e);
                 }
