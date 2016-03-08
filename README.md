@@ -34,7 +34,7 @@ The autoscaler will adjust matching profile assignments on containers matching t
 Fuse-autoscaler uses the following parameters in io.fabric8.autoscale PID:
 
 * **pollTime (long: 15000)**: The number of milliseconds between polls to check if the system still has its requirements satisfied.
-* **autoscalerGroupId ("default")**: (NOT TESTED YET) The group ID for this autoscaler. You can run multiple autoscalers concurrently as long as they have unique group IDs. If you do, take care that the profilePatterns don't overlap or things might get crazy.
+* **autoscalerGroupId ("default")**: The group ID for this autoscaler. You can run multiple autoscalers concurrently as long as they have unique group IDs. If you do, take care that the profilePatterns don't overlap or things might get crazy. See Example 2.
 * **scaleContainers (bool: true)**: Allow autoscaler to create, start and remove containers.
 * **profilePattern (regex: `^.*-auto`)**: Only matching profile names are considered for autoscaling.
 * **containerPattern (regex: `^auto.*`)**: Only matching containers are used for profile assignment autoscaling.
@@ -55,7 +55,9 @@ Create a new profile, add com.github.yuruki/fuse-autoscale bundle to it and add 
 
 When *scaleContainers* is set to *true*, deleting containers or shutting them down in order to reboot the host cleanly can be difficult because the autoscaler keeps restarting and recreating the containers.
 
-To enter so-called Maintenance mode which allows you to control container lifecycle manually, set *scaleContainers* to *false* and increase *maxDeviation* to *1* (depends on your setup) to allow profiles to migrate to other containers. You can perform the change with for example *fabric:profile-edit --pid io.fabric8.autoscale/scaleContainers=false --pid io.fabric8.autoscale/maxDeviation=1 your-profile* command. Set *scaleContainers* and *maxDeviation* back to their original values when you are done and the host is ready.
+To enter so-called Maintenance mode which allows you to control container lifecycle manually, set *scaleContainers* to *false* and increase *maxDeviation* to allow profiles to migrate to other containers (the value depends on your setup). You can perform the change with for example *fabric:profile-edit --pid io.fabric8.autoscale/scaleContainers=false --pid io.fabric8.autoscale/maxDeviation=1 your-autoscale-profile* command. The PID to use is the properties file name without the extension.
+
+Set *scaleContainers* and *maxDeviation* back to their original values when you are done and the root container is up.
 
 ## Caveats
 
@@ -63,7 +65,8 @@ Autoscaler can only create child containers for now. Feel free to add the other 
 
 ## Example 1
 
-io.fabric8.autoscale/
+io.fabric8.autoscale.properties:
+
 * scaleContainers = false
 * profilePattern = ^.*-dev$
 * containerPattern = ^camel.*$
@@ -77,17 +80,40 @@ Using a different profilePattern for test and production environments you can co
 
 ## Example 2
 
-io.fabric8.autoscale/
-* scaleContainers = true
-* profilePattern = `^(my-template-.*)|(my-bundle-.*)$`
-* containerPattern = ^camel.*$
-* containerPrefix = camel
-* maxContainersPerHost = 3
-* averageInstancesPerContainer = 50
-* defaultMaxInstancesPerHost = 1
-* maxDeviation = 1.0
-* inheritRequirements = true
+This is a real-world configuration from our UAT environment. We create one fuse-autoscale instance for the brokers and one for the workers by using a "dash suffix" in the properties file name (OSGi Factory Configuration).
 
-This is a configuration we will probably use in our UAT and production environments. The autoscaler will consider profiles that match "my-template-\*" or "my-bundle-\*" and assign them on containers starting with "camel". Container lifecycle will be controlled by the autoscaler.
+io.fabric8.autoscale-broker.properties:
+
+* autoscalerGroupId = broker
+* profilePattern = ^mq-broker-.*-devbroker$
+* scaleContainers = true
+* containerPattern = ^broker.*$
+* containerPrefix = broker
+* maxContainersPerHost = 1
+* minContainerCount = 2
+* defaultMaxInstancesPerHost = 1
+* inheritRequirements = true
+* averageInstancesPerContainer = 1
+* maxDeviation = 0
+
+io.fabric8.autoscale-worker.properties:
+
+* autoscalerGroupId = worker
+* profilePattern = ^(company-template-.*-test)|(company-bundle-.*-test)$
+* scaleContainers = true
+* containerPattern = ^worker.*$
+* containerPrefix = worker
+* defaultMaxInstancesPerHost = 1
+* inheritRequirements = true
+* maxContainersPerHost = 2
+* minContainerCount = 4
+* averageInstancesPerContainer = 40
+* maxDeviation = 0.5
 
 We won't configure maximum instances per host in the profile requirements; autoscaler will use the default value of 1. We will only define the requirements for the profiles that we explicitly want to assign. Profile dependencies defined via dependsOn mechanism will inherit their requirements from their parents. This will keep the profile requirements DRY.
+
+The broker autoscaler will consider profiles that match "mq-broker-\*-testbroker" and assign them on containers starting with "broker" according to profile requirements. We want at most one container per host and one broker profile per container. When in maintenance mode (scaleContainers=false) we want the autoscaler to stay passive if there are less than two broker containers available.
+
+The worker autoscaler will consider profiles that match "company-template-\*-test" or "company-bundle-\*-test" and assign them on containers starting with "worker" according to profile requirements. We want at most two containers per host and on average 40 worker profiles per container (at most 60 per container). When in maintenance mode we want the autoscaler to stay passive if there are less than four worker containers available.
+
+Broker and worker container lifecycles will be controlled by their associated autoscalers.
