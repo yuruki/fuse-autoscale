@@ -77,7 +77,7 @@ public class AutoScaledGroup extends ProfileContainer {
         int profileInstances = 0;
         int requiredHosts = 0;
 
-        for (ProfileRequirements profile : pruneProfileRequirements(options.getProfilePattern(), options.getInheritRequirements(), profiles)) {
+        for (ProfileRequirements profile : pruneProfileRequirements(options.getProfilePattern(), options.isInheritRequirements(), profiles)) {
             if (profile.getMaximumInstancesPerHost() == null) {
                 profile.setMaximumInstancesPerHost(options.getDefaultMaxInstancesPerHost());
             }
@@ -105,7 +105,7 @@ public class AutoScaledGroup extends ProfileContainer {
         }
 
         // Collect all applicable containers
-        if (options.getScaleContainers()) {
+        if (options.isScaleContainers()) {
             for (Container container : containers) {
                 if (options.getContainerPattern().reset(container.getId()).matches()) {
                     AutoScaledContainer.newAutoScaledContainer(this, container, containerFactory);
@@ -153,7 +153,7 @@ public class AutoScaledGroup extends ProfileContainer {
                         }
                     }
                     if (exception != null) {
-                        if (options.getIgnoreErrors()) {
+                        if (options.isIgnoreErrors()) {
                             LOGGER.error("Couldn't satisfy requirements for profile {}. This exception is ignored.", profile.getProfile(), exception);
                         } else {
                             throw new Exception("Couldn't satisfy requirements for profile " + profile.getProfile(), exception);
@@ -165,7 +165,7 @@ public class AutoScaledGroup extends ProfileContainer {
     }
 
     private void scaleContainers(int profileInstances, int requiredHosts, int desiredAverageInstancesPerContainer) throws Exception {
-        if (!options.getScaleContainers()) {
+        if (!options.isScaleContainers()) {
             return;
         }
         if (options.getAverageInstancesPerContainer() < 1) {
@@ -182,7 +182,7 @@ public class AutoScaledGroup extends ProfileContainer {
                     String containerId = createContainerId();
                     AutoScaledContainer.newAutoScaledContainer(this, containerId, i < hostDelta, containerFactory);
                 } catch (Exception e) {
-                    if (options.getIgnoreErrors()) {
+                    if (options.isIgnoreErrors()) {
                         LOGGER.error("Failed to create new auto-scaled container. This exception is ignored", e);
                     } else {
                         throw e;

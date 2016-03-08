@@ -20,43 +20,49 @@ import java.util.regex.Pattern;
 
 public class AutoScaledGroupOptions {
 
+    private int averageInstancesPerContainer = -1;
+    public static final String AVERAGE_INSTANCES_PER_CONTAINER_DEFAULT = "-1";
     private Matcher containerPattern = Pattern.compile("^auto.*").matcher("");
     public static final String CONTAINER_PATTERN_DEFAULT = "^auto.*";
-    private Matcher profilePattern = Pattern.compile("^.*-auto").matcher("");
-    public static final String PROFILE_PATTERN_DEFAULT = "^.*-auto";
-    private Boolean scaleContainers = true;
-    public static final String SCALE_CONTAINERS_DEFAULT = "true";
-    private Boolean inheritRequirements = true;
-    public static final String INHERIT_REQUIREMENTS_DEFAULT = "true";
-    private Double maxDeviation = 1.0;
-    public static final String MAX_DEVIATION_DEFAULT = "1.0";
-    private Integer averageInstancesPerContainer = -1;
-    public static final String AVERAGE_INSTANCES_PER_CONTAINER_DEFAULT = "-1";
     private String containerPrefix = "auto";
     public static final String CONTAINER_PREFIX_DEFAULT = "auto";
-    private Integer minContainerCount = 0;
-    public static final String MIN_CONTAINER_COUNT_DEFAULT = "0";
-    private Integer defaultMaxInstancesPerHost = 1;
+    private int defaultMaxInstancesPerHost = 1;
     public static final String DEFAULT_MAX_INSTANCES_PER_HOST_DEFAULT = "1";
-    private Boolean ignoreErrors = true;
+    private boolean ignoreErrors = true;
     public static final String IGNORE_ERRORS_DEFAULT = "true";
-    private Integer maxContainersPerHost = 3;
+    private boolean inheritRequirements = true;
+    public static final String INHERIT_REQUIREMENTS_DEFAULT = "true";
+    private int maxContainersPerHost = 3;
     public static final String MAX_CONTAINERS_PER_HOST_DEFAULT = "3";
+    private double maxDeviation = 1.0;
+    public static final String MAX_DEVIATION_DEFAULT = "1.0";
+    private int minContainerCount = 0;
+    public static final String MIN_CONTAINER_COUNT_DEFAULT = "0";
+    private Matcher profilePattern = Pattern.compile("^.*-auto").matcher("");
+    public static final String PROFILE_PATTERN_DEFAULT = "^.*-auto";
+    private boolean scaleContainers = true;
+    public static final String SCALE_CONTAINERS_DEFAULT = "true";
+    private boolean verbose = false;
+    public static final String VERBOSE_DEFAULT = "false";
+    private boolean dryRun = false;
+    public static final String DRY_RUN_DEFAULT = "false";
 
     public AutoScaledGroupOptions() {}
 
     public AutoScaledGroupOptions(
         Matcher containerPattern,
         Matcher profilePattern,
-        Boolean scaleContainers,
-        Boolean inheritRequirements,
-        Double maxDeviation,
-        Integer averageInstancesPerContainer,
+        boolean scaleContainers,
+        boolean inheritRequirements,
+        double maxDeviation,
+        int averageInstancesPerContainer,
         String containerPrefix,
-        Integer minContainerCount,
-        Integer defaultMaxInstancesPerHost,
-        Boolean ignoreErrors,
-        Integer maxContainersPerHost) {
+        int minContainerCount,
+        int defaultMaxInstancesPerHost,
+        boolean ignoreErrors,
+        int maxContainersPerHost,
+        boolean verbose,
+        boolean dryRun) {
         this.containerPattern = containerPattern;
         this.profilePattern = profilePattern;
         this.scaleContainers = scaleContainers;
@@ -68,6 +74,8 @@ public class AutoScaledGroupOptions {
         this.defaultMaxInstancesPerHost = defaultMaxInstancesPerHost;
         this.ignoreErrors = ignoreErrors;
         this.maxContainersPerHost = maxContainersPerHost;
+        this.verbose = verbose;
+        this.dryRun = dryRun;
     }
 
     public AutoScaledGroupOptions containerPattern(Matcher containerPattern) {
@@ -80,22 +88,22 @@ public class AutoScaledGroupOptions {
         return this;
     }
 
-    public AutoScaledGroupOptions scaleContainers(Boolean scaleContainers) {
+    public AutoScaledGroupOptions scaleContainers(boolean scaleContainers) {
         setScaleContainers(scaleContainers);
         return this;
     }
 
-    public AutoScaledGroupOptions inheritRequirements(Boolean inheritRequirements) {
+    public AutoScaledGroupOptions inheritRequirements(boolean inheritRequirements) {
         setInheritRequirements(inheritRequirements);
         return this;
     }
 
-    public AutoScaledGroupOptions maxDeviation(Double maxDeviation) {
+    public AutoScaledGroupOptions maxDeviation(double maxDeviation) {
         setMaxDeviation(maxDeviation);
         return this;
     }
 
-    public AutoScaledGroupOptions averageInstancesPerContainer(Integer averageInstancesPerContainer) {
+    public AutoScaledGroupOptions averageInstancesPerContainer(int averageInstancesPerContainer) {
         setAverageInstancesPerContainer(averageInstancesPerContainer);
         return this;
     }
@@ -105,23 +113,33 @@ public class AutoScaledGroupOptions {
         return this;
     }
 
-    public AutoScaledGroupOptions minContainerCount(Integer minContainerCount) {
+    public AutoScaledGroupOptions minContainerCount(int minContainerCount) {
         setMinContainerCount(minContainerCount);
         return this;
     }
 
-    public AutoScaledGroupOptions defaultMaxInstancesPerHost(Integer defaultMaxInstancesPerHost) {
+    public AutoScaledGroupOptions defaultMaxInstancesPerHost(int defaultMaxInstancesPerHost) {
         setDefaultMaxInstancesPerHost(defaultMaxInstancesPerHost);
         return this;
     }
 
-    public AutoScaledGroupOptions ignoreErrors(Boolean ignoreErrors) {
+    public AutoScaledGroupOptions ignoreErrors(boolean ignoreErrors) {
         setIgnoreErrors(ignoreErrors);
         return this;
     }
 
-    public AutoScaledGroupOptions maxContainersPerHost(Integer maxContainersPerHost) {
+    public AutoScaledGroupOptions maxContainersPerHost(int maxContainersPerHost) {
         setMaxContainersPerHost(maxContainersPerHost);
+        return this;
+    }
+
+    public AutoScaledGroupOptions verbose(boolean verbose) {
+        setVerbose(verbose);
+        return this;
+    }
+
+    public AutoScaledGroupOptions dryRun(boolean dryRun) {
+        setDryRun(dryRun);
         return this;
     }
 
@@ -141,35 +159,35 @@ public class AutoScaledGroupOptions {
         this.profilePattern = profilePattern;
     }
 
-    public Boolean getScaleContainers() {
+    public boolean isScaleContainers() {
         return scaleContainers;
     }
 
-    public void setScaleContainers(Boolean scaleContainers) {
+    public void setScaleContainers(boolean scaleContainers) {
         this.scaleContainers = scaleContainers;
     }
 
-    public Boolean getInheritRequirements() {
+    public boolean isInheritRequirements() {
         return inheritRequirements;
     }
 
-    public void setInheritRequirements(Boolean inheritRequirements) {
+    public void setInheritRequirements(boolean inheritRequirements) {
         this.inheritRequirements = inheritRequirements;
     }
 
-    public Double getMaxDeviation() {
+    public double getMaxDeviation() {
         return maxDeviation;
     }
 
-    public void setMaxDeviation(Double maxDeviation) {
+    public void setMaxDeviation(double maxDeviation) {
         this.maxDeviation = maxDeviation;
     }
 
-    public Integer getAverageInstancesPerContainer() {
+    public int getAverageInstancesPerContainer() {
         return averageInstancesPerContainer;
     }
 
-    public void setAverageInstancesPerContainer(Integer averageInstancesPerContainer) {
+    public void setAverageInstancesPerContainer(int averageInstancesPerContainer) {
         this.averageInstancesPerContainer = averageInstancesPerContainer;
     }
 
@@ -181,35 +199,55 @@ public class AutoScaledGroupOptions {
         this.containerPrefix = containerPrefix;
     }
 
-    public Integer getMinContainerCount() {
+    public int getMinContainerCount() {
         return minContainerCount;
     }
 
-    public void setMinContainerCount(Integer minContainerCount) {
+    public void setMinContainerCount(int minContainerCount) {
         this.minContainerCount = minContainerCount;
     }
 
-    public Integer getDefaultMaxInstancesPerHost() {
+    public int getDefaultMaxInstancesPerHost() {
         return defaultMaxInstancesPerHost;
     }
 
-    public void setDefaultMaxInstancesPerHost(Integer defaultMaxInstancesPerHost) {
+    public void setDefaultMaxInstancesPerHost(int defaultMaxInstancesPerHost) {
         this.defaultMaxInstancesPerHost = defaultMaxInstancesPerHost;
     }
 
-    public Boolean getIgnoreErrors() {
+    public boolean isIgnoreErrors() {
         return ignoreErrors;
     }
 
-    public void setIgnoreErrors(Boolean ignoreErrors) {
+    public void setIgnoreErrors(boolean ignoreErrors) {
         this.ignoreErrors = ignoreErrors;
     }
 
-    public Integer getMaxContainersPerHost() {
+    public int getMaxContainersPerHost() {
         return maxContainersPerHost;
     }
 
-    public void setMaxContainersPerHost(Integer maxContainersPerHost) {
+    public void setMaxContainersPerHost(int maxContainersPerHost) {
         this.maxContainersPerHost = maxContainersPerHost;
+    }
+
+    public boolean isVerbose() {
+        return verbose;
+    }
+
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
+    }
+
+    public boolean isDryRun() {
+        return dryRun;
+    }
+
+    public void setDryRun(boolean dryRun) {
+        this.dryRun = dryRun;
+    }
+
+    public boolean isVerboseOrDryRun() {
+        return verbose || dryRun;
     }
 }

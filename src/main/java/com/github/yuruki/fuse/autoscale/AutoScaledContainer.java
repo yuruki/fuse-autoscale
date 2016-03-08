@@ -29,6 +29,7 @@ import java.util.UUID;
 import io.fabric8.api.Container;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileRequirements;
+import io.fabric8.common.util.Arrays;
 
 public class AutoScaledContainer extends ProfileContainer implements Runnable {
 
@@ -220,23 +221,39 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
                     if (profile != null) {
                         profiles.add(container.getVersion().getProfile(profileId));
                     } else {
-                        LOGGER.warn("Profile {} doesn't exist in version {}, can't assign to container {}. This exception is ignored.", profileId, container.getVersionId(), id);
+                        LOGGER.error("Profile {} doesn't exist in version {}, can't assign to container {}. This exception is ignored.", profileId, container.getVersionId(), id);
                     }
                 }
-                // Adjust existing container
-                LOGGER.info("Setting profiles for container {}", container.getId());
-                container.setProfiles(profiles.toArray(new Profile[profiles.size()]));
-                if (!container.isAlive()) {
-                    container.start();
+                // Update existing container
+                if (group.getOptions().isDryRun()) {
+                    LOGGER.info("Would have updated container {} with profiles: {}", container.getId(), Arrays.join(", ", sortedResult));
+                } else {
+                    if (group.getOptions().isVerbose()) {
+                        LOGGER.info("Updating container {} with profiles: {}", container.getId(), Arrays.join(", ", sortedResult));
+                    } else {
+                        LOGGER.info("Updating profiles for container {}", container.getId());
+                    }
+                    container.setProfiles(profiles.toArray(new Profile[profiles.size()]));
+                    if (!container.isAlive()) {
+                        container.start();
+                    }
                 }
             } else {
-                // Create container
-                // TODO: generalize for any provider
-                try {
-                    containerFactory.createChildContainer(id, sortedResult.toArray(new String[sortedResult.size()]), ((AutoScaledHost) host).getRootContainer());
-                    LOGGER.info("Container {} created", id);
-                } catch (Exception e) {
-                    LOGGER.error("Couldn't create child container {}. This exception is ignored.", id, e);
+                if (group.getOptions().isDryRun()) {
+                    LOGGER.info("Would have created container {} with profiles: {}", id, Arrays.join(", ", sortedResult));
+                } else {
+                    // TODO: generalize for any provider
+                    // Create container
+                    try {
+                        containerFactory.createChildContainer(id, sortedResult.toArray(new String[sortedResult.size()]), ((AutoScaledHost) host).getRootContainer());
+                        if (group.getOptions().isVerbose()) {
+                            LOGGER.info("Created container {} with profiles: {}", id, Arrays.join(", ", sortedResult));
+                        } else {
+                            LOGGER.info("Container {} created", id);
+                        }
+                    } catch (Exception e) {
+                        LOGGER.error("Couldn't create child container {}. This exception is ignored.", id, e);
+                    }
                 }
             }
         }
