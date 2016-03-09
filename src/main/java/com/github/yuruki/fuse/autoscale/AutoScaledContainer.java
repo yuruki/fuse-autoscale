@@ -234,11 +234,12 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
                 }
                 // Update existing container
                 if (group.getOptions().isDryRun()) {
-                    LOGGER.info("Would have updated container {}: added: {} removed: {}", container.getId(), Arrays.join(", ", additions), Arrays.join(", ", removals));
+                    LOGGER.info("Would have updated container {}: added: {} removed: {}", id, Arrays.join(", ", additions), Arrays.join(", ", removals));
                 } else {
-                    LOGGER.info("Updating container {}: added: {} removed: {}", container.getId(), Arrays.join(", ", additions), Arrays.join(", ", removals));
+                    LOGGER.info("Updating container {}: added: {} removed: {}", id, Arrays.join(", ", additions), Arrays.join(", ", removals));
                     container.setProfiles(profiles.toArray(new Profile[profiles.size()]));
                     if (!container.isAlive()) {
+                        LOGGER.info("Starting container {}", id);
                         container.start();
                     }
                 }

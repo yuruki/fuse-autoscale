@@ -106,9 +106,9 @@ io.fabric8.autoscale-worker.properties:
 * containerPrefix = worker
 * defaultMaxInstancesPerHost = 1
 * inheritRequirements = true
-* maxContainersPerHost = 2
-* minContainerCount = 4
-* averageInstancesPerContainer = 40
+* maxContainersPerHost = 3
+* minContainerCount = 6
+* averageInstancesPerContainer = 30
 * maxDeviation = 0.5
 
 We won't configure maximum instances per host in the profile requirements; autoscaler will use the default value of 1. We will only define the requirements for the profiles that we explicitly want to assign. Profile dependencies defined via dependsOn mechanism will inherit their requirements from their parents. This will keep the profile requirements DRY.
