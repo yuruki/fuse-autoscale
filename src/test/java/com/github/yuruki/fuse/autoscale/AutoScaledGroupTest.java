@@ -70,8 +70,7 @@ public class AutoScaledGroupTest {
             .inheritRequirements(true)
             .containerPrefix("auto")
             .minContainerCount(1)
-            .defaultMaxInstancesPerHost(1)
-            .verbose(true);
+            .defaultMaxInstancesPerHost(1);
 
         // Set up auto-scaled group
         AutoScaledGroup autoScaledGroup = new AutoScaledGroup("test", options, containerList.toArray(new Container[containerList.size()]), profileRequirements.toArray(new ProfileRequirements[profileRequirements.size()]), new ContainerFactory(fabricService));
@@ -128,8 +127,7 @@ public class AutoScaledGroupTest {
             .inheritRequirements(true)
             .containerPrefix("auto")
             .minContainerCount(1)
-            .defaultMaxInstancesPerHost(1)
-            .verbose(true);
+            .defaultMaxInstancesPerHost(1);
 
         // Set up auto-scaled group
         assertEquals("Warnings or errors logged too early", 0, appender.getLog().size());
@@ -188,8 +186,7 @@ public class AutoScaledGroupTest {
             .inheritRequirements(true)
             .containerPrefix("auto")
             .defaultMaxInstancesPerHost(1)
-            .averageInstancesPerContainer(10)
-            .verbose(true);
+            .averageInstancesPerContainer(10);
 
         // Set up auto-scaled group
         assertEquals("Warnings or errors logged too early", 0, appender.getLog().size());
@@ -254,8 +251,7 @@ public class AutoScaledGroupTest {
             .inheritRequirements(true)
             .containerPrefix("auto")
             .defaultMaxInstancesPerHost(1)
-            .averageInstancesPerContainer(10)
-            .verbose(true);
+            .averageInstancesPerContainer(10);
 
         // Set up auto-scaled group
         assertEquals("Warnings or errors logged too early", 0, appender.getLog().size());
@@ -309,8 +305,7 @@ public class AutoScaledGroupTest {
             .containerPrefix("auto")
             .defaultMaxInstancesPerHost(1)
             .maxDeviation(0.0)
-            .averageInstancesPerContainer(1)
-            .verbose(true);
+            .averageInstancesPerContainer(1);
 
         // Set up auto-scaled group
         assertEquals("Warnings or errors logged too early", 0, appender.getLog().size());

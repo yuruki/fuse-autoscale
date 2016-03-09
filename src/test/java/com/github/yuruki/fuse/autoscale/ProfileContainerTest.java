@@ -6,10 +6,10 @@ import java.util.regex.Pattern;
 
 import io.fabric8.api.Container;
 import io.fabric8.api.ProfileRequirements;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class ProfileContainerTest {
 
@@ -61,8 +61,7 @@ public class ProfileContainerTest {
             .profilePattern(Pattern.compile("^.*-auto$").matcher(""))
             .inheritRequirements(true)
             .defaultMaxInstancesPerHost(1)
-            .averageInstancesPerContainer(10)
-            .verbose(true);
+            .averageInstancesPerContainer(10);
 
         // Set up testables
         autoScaledGroup = new AutoScaledGroup("test", options, containerList.toArray(new Container[containerList.size()]), profileRequirements.toArray(new ProfileRequirements[profileRequirements.size()]), new ContainerFactory(fabricService));

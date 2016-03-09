@@ -46,6 +46,7 @@ Fuse-autoscaler uses the following parameters in io.fabric8.autoscale PID:
 * **averageInstancesPerContainer (int: -1)**: The desired average number of profile instances per container when scaling with containers.
 * **maxContainersPerHost (int: 3)**: Maximum allowed number of autoscaled containers per host. Set this to match the resources of your hosts.
 * **ignoreErrors (bool: true)**: Perform autoscaling even when all the requirements couldn't be satisfied.
+* **dryRun (bool: false)**: Do not apply any changes, only log them. Useful for safe testing on a live system.
 
 ## Usage
 
@@ -68,8 +69,8 @@ Autoscaler can only create child containers for now. Feel free to add the other 
 io.fabric8.autoscale.properties:
 
 * scaleContainers = false
-* profilePattern = ^.*-dev$
-* containerPattern = ^camel.*$
+* profilePattern = `^.*-dev$`
+* containerPattern = `^camel.*$`
 * defaultMaxInstancesPerHost = 1
 
 With this configuration the autoscaler will not create, start or remove any containers. Instead it will try to assign matched profiles according to their requirements on applicable running containers. The autoscaler will consider profiles that end with "-dev" and containers whose name starts with "camel". By default the maximum profile instances per host are limited to 1.
@@ -85,9 +86,9 @@ This is a real-world configuration from our UAT environment. We create one fuse-
 io.fabric8.autoscale-broker.properties:
 
 * autoscalerGroupId = broker
-* profilePattern = ^mq-broker-.*-devbroker$
+* profilePattern = `^mq-broker-.*-devbroker$`
 * scaleContainers = true
-* containerPattern = ^broker.*$
+* containerPattern = `^broker.*$`
 * containerPrefix = broker
 * maxContainersPerHost = 1
 * minContainerCount = 2
@@ -99,9 +100,9 @@ io.fabric8.autoscale-broker.properties:
 io.fabric8.autoscale-worker.properties:
 
 * autoscalerGroupId = worker
-* profilePattern = ^(company-template-.*-test)|(company-bundle-.*-test)$
+* profilePattern = `^(company-template-.*-test)|(company-bundle-.*-test)$`
 * scaleContainers = true
-* containerPattern = ^worker.*$
+* containerPattern = `^worker.*$`
 * containerPrefix = worker
 * defaultMaxInstancesPerHost = 1
 * inheritRequirements = true

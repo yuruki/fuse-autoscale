@@ -42,8 +42,6 @@ public class AutoScaledGroupOptions {
     public static final String PROFILE_PATTERN_DEFAULT = "^.*-auto";
     private boolean scaleContainers = true;
     public static final String SCALE_CONTAINERS_DEFAULT = "true";
-    private boolean verbose = false;
-    public static final String VERBOSE_DEFAULT = "false";
     private boolean dryRun = false;
     public static final String DRY_RUN_DEFAULT = "false";
 
@@ -61,7 +59,6 @@ public class AutoScaledGroupOptions {
         int defaultMaxInstancesPerHost,
         boolean ignoreErrors,
         int maxContainersPerHost,
-        boolean verbose,
         boolean dryRun) {
         this.containerPattern = containerPattern;
         this.profilePattern = profilePattern;
@@ -74,7 +71,6 @@ public class AutoScaledGroupOptions {
         this.defaultMaxInstancesPerHost = defaultMaxInstancesPerHost;
         this.ignoreErrors = ignoreErrors;
         this.maxContainersPerHost = maxContainersPerHost;
-        this.verbose = verbose;
         this.dryRun = dryRun;
     }
 
@@ -130,11 +126,6 @@ public class AutoScaledGroupOptions {
 
     public AutoScaledGroupOptions maxContainersPerHost(int maxContainersPerHost) {
         setMaxContainersPerHost(maxContainersPerHost);
-        return this;
-    }
-
-    public AutoScaledGroupOptions verbose(boolean verbose) {
-        setVerbose(verbose);
         return this;
     }
 
@@ -231,23 +222,11 @@ public class AutoScaledGroupOptions {
         this.maxContainersPerHost = maxContainersPerHost;
     }
 
-    public boolean isVerbose() {
-        return verbose;
-    }
-
-    public void setVerbose(boolean verbose) {
-        this.verbose = verbose;
-    }
-
     public boolean isDryRun() {
         return dryRun;
     }
 
     public void setDryRun(boolean dryRun) {
         this.dryRun = dryRun;
-    }
-
-    public boolean isVerboseOrDryRun() {
-        return verbose || dryRun;
     }
 }

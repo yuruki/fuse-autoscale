@@ -104,10 +104,7 @@ public final class AutoScaleController extends AbstractComponent implements Grou
     @Property(value = AutoScaledGroupOptions.MAX_CONTAINERS_PER_HOST_DEFAULT, label = "Maximum allowed auto-scaled containers per host", description = "Maximum number of auto-scaled containers per host for this group.")
     private static final String MAX_CONTAINERS_PER_HOST = "maxContainersPerHost";
     private Integer maxContainersPerHost;
-    @Property(value = AutoScaledGroupOptions.VERBOSE_DEFAULT, label = "Verbose logging", description = "Log more information on what the autoscaler is doing.")
-    private static final String VERBOSE = "verbose";
-    private Boolean verbose;
-    @Property(value = AutoScaledGroupOptions.DRY_RUN_DEFAULT, label = "Don't apply changes", description = "Don't apply any changes. Implies verbose = true.")
+    @Property(value = AutoScaledGroupOptions.DRY_RUN_DEFAULT, label = "Do not apply changes", description = "Do not apply any changes.")
     private static final String DRY_RUN = "dryRun";
     private Boolean dryRun;
 
@@ -139,7 +136,6 @@ public final class AutoScaleController extends AbstractComponent implements Grou
         this.averageInstancesPerContainer = Integer.parseInt(properties.get(AVERAGE_INSTANCES_PER_CONTAINER));
         this.ignoreErrors = Boolean.parseBoolean(properties.get(IGNORE_ERRORS));
         this.maxContainersPerHost = Integer.parseInt(properties.get(MAX_CONTAINERS_PER_HOST));
-        this.verbose = Boolean.parseBoolean(properties.get(VERBOSE));
         this.dryRun = Boolean.parseBoolean(properties.get(DRY_RUN));
         CuratorFramework curator = this.curator.get();
         enableMasterZkCache(curator);
@@ -253,7 +249,6 @@ public final class AutoScaleController extends AbstractComponent implements Grou
                 defaultMaximumInstancesPerHost,
                 ignoreErrors,
                 maxContainersPerHost,
-                verbose,
                 dryRun);
             List<ProfileRequirements> profileRequirements = service.getRequirements().getProfileRequirements();
             AutoScaledGroup autoScaledGroup = new AutoScaledGroup(

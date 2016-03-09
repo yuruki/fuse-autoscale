@@ -201,12 +201,20 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
 
         // Find the changes
         Set<String> resultSet = new HashSet<>(currentProfiles);
+        Set<String> additions = new HashSet<>();
+        Set<String> removals = new HashSet<>();
         for (Map.Entry<String, Boolean> entry : profiles.entrySet()) {
             final String profile = entry.getKey();
             if (entry.getValue()) {
                 resultSet.add(profile);
+                if (!currentProfiles.contains(profile)) {
+                    additions.add(profile);
+                }
             } else {
                 resultSet.remove(profile);
+                if (currentProfiles.contains(profile)) {
+                    removals.add(profile);
+                }
             }
         }
 
@@ -226,13 +234,9 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
                 }
                 // Update existing container
                 if (group.getOptions().isDryRun()) {
-                    LOGGER.info("Would have updated container {} with profiles: {}", container.getId(), Arrays.join(", ", sortedResult));
+                    LOGGER.info("Would have updated container {}: added: {} removed: {}", container.getId(), Arrays.join(", ", additions), Arrays.join(", ", removals));
                 } else {
-                    if (group.getOptions().isVerbose()) {
-                        LOGGER.info("Updating container {} with profiles: {}", container.getId(), Arrays.join(", ", sortedResult));
-                    } else {
-                        LOGGER.info("Updating profiles for container {}", container.getId());
-                    }
+                    LOGGER.info("Updating container {}: added: {} removed: {}", container.getId(), Arrays.join(", ", additions), Arrays.join(", ", removals));
                     container.setProfiles(profiles.toArray(new Profile[profiles.size()]));
                     if (!container.isAlive()) {
                         container.start();
@@ -246,13 +250,9 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
                     // Create container
                     try {
                         containerFactory.createChildContainer(id, sortedResult.toArray(new String[sortedResult.size()]), ((AutoScaledHost) host).getRootContainer());
-                        if (group.getOptions().isVerbose()) {
-                            LOGGER.info("Created container {} with profiles: {}", id, Arrays.join(", ", sortedResult));
-                        } else {
-                            LOGGER.info("Container {} created", id);
-                        }
+                        LOGGER.info("Created container {} with profiles: {}", id, Arrays.join(", ", sortedResult));
                     } catch (Exception e) {
-                        LOGGER.error("Couldn't create child container {}. This exception is ignored.", id, e);
+                        LOGGER.error("Couldn't create child container {} with profiles: {}. This exception is ignored.", id, Arrays.join(", ", sortedResult), e);
                     }
                 }
             }
