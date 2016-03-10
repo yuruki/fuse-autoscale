@@ -2,7 +2,7 @@
 
 ## Background
 
-We are running Red Hat JBoss Fuse 6.2.1 (fabric8 1.2) with Apache Karaf on 3 to 5 node Fabric ensembles. We have one CamelContext per bundle and one Fabric profile per bundle. This adds up to over 100 of CamelContexts, bundles and profiles each.
+We are running Red Hat JBoss Fuse 6.2.1 (fabric8 1.2) on Karaf with 3 to 5 node Fabric ensembles. We have one CamelContext per bundle and one Fabric profile per bundle. This adds up to over 100 of CamelContexts, bundles and profiles each.
 
 The problem we are facing is scaling. The bundles keep piling up but they are still running on one Karaf container per host. The JVM heap size is getting a bit unwieldy.
 
@@ -34,7 +34,7 @@ The autoscaler will adjust matching profile assignments on containers matching t
 Fuse-autoscaler uses the following parameters in io.fabric8.autoscale PID:
 
 * **pollTime (long: 15000)**: The number of milliseconds between polls to check if the system still has its requirements satisfied.
-* **autoscalerGroupId ("default")**: The group ID for this autoscaler. You can run multiple autoscalers concurrently as long as they have unique group IDs. If you do, take care that the profilePatterns don't overlap or things might get crazy. See Example 2.
+* **autoscalerGroupId ("default")**: The group ID for this autoscaler. You can run multiple autoscalers concurrently as long as they have unique group IDs. If you do, take care that the profilePatterns don't overlap or things might get crazy. See Example 2 below.
 * **scaleContainers (bool: true)**: Allow autoscaler to create, start and remove containers.
 * **profilePattern (regex: `^.*-auto`)**: Only matching profile names are considered for autoscaling.
 * **containerPattern (regex: `^auto.*`)**: Only matching containers are used for profile assignment autoscaling.
@@ -54,11 +54,11 @@ Create a new profile, add com.github.yuruki/fuse-autoscale bundle to it and add 
 
 ### Maintenance mode
 
-When *scaleContainers* is set to *true*, deleting containers or shutting them down in order to reboot the host cleanly can be difficult because the autoscaler keeps restarting and recreating the containers.
+When `scaleContainers = true`, deleting containers or shutting them down in order to reboot the host cleanly can be difficult because the autoscaler keeps restarting and recreating the containers.
 
-To enter so-called Maintenance mode which allows you to control container lifecycle manually, set *scaleContainers* to *false* and increase *maxDeviation* to allow profiles to migrate to other containers (the value depends on your setup). You can perform the change with for example *fabric:profile-edit --pid io.fabric8.autoscale/scaleContainers=false --pid io.fabric8.autoscale/maxDeviation=1 your-autoscale-profile* command. The PID to use is the properties file name without the extension.
+To enter so-called Maintenance mode which allows you to control container lifecycle manually, set `scaleContainers = false` and increase `maxDeviation` to allow orphaned profiles to migrate to the remaining containers (the value depends on your setup). You can perform the change with for example `fabric:profile-edit --pid io.fabric8.autoscale/scaleContainers=false --pid io.fabric8.autoscale/maxDeviation=1 your-autoscale-profile` command. The PID to use is the properties file name without the extension.
 
-Set *scaleContainers* and *maxDeviation* back to their original values when you are done and the root container is up.
+Set `scaleContainers` and `maxDeviation` back to their original values when you are done and the root container is up.
 
 ## Caveats
 
