@@ -1,4 +1,4 @@
-# Autoscaler for Red Hat JBoss Fuse 6.2 (fabric8 1.2)
+# Autoscaler for Red Hat JBoss Fuse 6.2 on Karaf (fabric8 1.2)
 
 ## Background
 
