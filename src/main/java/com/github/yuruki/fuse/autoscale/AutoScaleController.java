@@ -55,8 +55,7 @@ import org.slf4j.LoggerFactory;
  * {@link FabricService#setRequirements(io.fabric8.api.FabricRequirements)}
  */
 @ThreadSafe
-@Component(name = "io.fabric8.autoscale", label = "Fabric8 auto scaler", immediate = true,
-        policy = ConfigurationPolicy.REQUIRE, metatype = true)
+@Component(name = "io.fabric8.autoscale", label = "Fuse Autoscaler", immediate = true, policy = ConfigurationPolicy.REQUIRE, metatype = true)
 public final class AutoScaleController extends AbstractComponent implements GroupListener<AutoScalerNode> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AutoScaleController.class);
 
