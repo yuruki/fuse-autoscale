@@ -48,12 +48,17 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
 
         if (container != null) {
             // Existing container
-            setHost(container.getIp(), getRootContainer(container));
-            LOGGER.debug("Added an existing container {} from host {}", id, host.getId());
+            if (container.isRoot()) {
+                removable = false; // Let's mark root containers non-removable
+                setHost(container.getIp(), container);
+            } else {
+                setHost(container.getIp(), container.getParent());
+            }
+            LOGGER.debug("Included an existing container {} from host {}", id, host.getId());
         } else if (newHost) {
             // New container on a new host
             setHost(UUID.randomUUID().toString()); // Any unique value goes
-            LOGGER.debug("Added a new container {} on a new host {}", id, host.getId());
+            LOGGER.debug("Requested a new container {} on a new host {}", id, host.getId());
         } else {
             // New (child) container on an existing host
             ProfileContainer rootHost = null;
@@ -65,9 +70,9 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
             }
             if (rootHost != null) {
                 setHost(rootHost);
-                LOGGER.debug("Added a new container {} on an existing host {}", id, host.getId());
+                LOGGER.debug("Requested a new container {} on an existing host {}", id, host.getId());
             } else {
-                throw new Exception("Can't add a child container. No root containers available.");
+                throw new Exception("Can't add a child container. No applicable root containers available.");
             }
         }
 
@@ -79,7 +84,7 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
                 } else if (group.matchesProfilePattern(profileId)) {
                     profiles.put(profileId, false); // Matched profile with no requirements. Marked as not assigned.
                 } else if (!profileId.equals("default") && removable) {
-                    removable = false; // Having unmatched profiles on the container means we can't remove it
+                    removable = false; // Having any unmatched profiles on the container means we can't remove it
                 }
             }
         }
@@ -90,19 +95,11 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
         }
     }
 
-    private Container getRootContainer(Container container) {
-        if (container.isRoot()) {
-            return container;
-        } else {
-            return container.getParent();
-        }
-    }
-
-    public static AutoScaledContainer newAutoScaledContainer(AutoScaledGroup group, Container container, ContainerFactory containerFactory) throws Exception {
+    public static AutoScaledContainer createAutoScaledContainer(AutoScaledGroup group, Container container, ContainerFactory containerFactory) throws Exception {
         return new AutoScaledContainer(container, container.getId(), group, false, containerFactory);
     }
 
-    public static AutoScaledContainer newAutoScaledContainer(AutoScaledGroup group, String id, boolean newHost, ContainerFactory containerFactory) throws Exception {
+    public static AutoScaledContainer createAutoScaledContainer(AutoScaledGroup group, String id, boolean newHost, ContainerFactory containerFactory) throws Exception {
         return new AutoScaledContainer(null, id, group, newHost, containerFactory);
     }
 

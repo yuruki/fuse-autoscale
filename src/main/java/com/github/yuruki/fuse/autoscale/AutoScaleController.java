@@ -71,28 +71,28 @@ public final class AutoScaleController extends AbstractComponent implements Grou
     @Property(value = "default", label = "Autoscaler group ID", description = "ID for the autoscaler group.")
     private static final String AUTOSCALER_GROUP_ID = "autoscalerGroupId";
     private String autoscalerGroupId;
-    @Property(value = AutoScaledGroupOptions.PROFILE_PATTERN_DEFAULT, label = "Profile name pattern", description = "Profiles matching this regex will be autoscaled.")
+    @Property(value = AutoScaledGroupOptions.PROFILE_PATTERN_DEFAULT, label = "Profile name pattern", description = "Profiles matching this pattern will be auto-scaled.")
     private static final String PROFILE_PATTERN = "profilePattern";
     private Matcher profilePattern;
-    @Property(value = AutoScaledGroupOptions.CONTAINER_PATTERN_DEFAULT, label = "Container name pattern", description = "Containers matching this regex will be used for profile assignment autoscaling.")
+    @Property(value = AutoScaledGroupOptions.CONTAINER_PATTERN_DEFAULT, label = "Container name pattern", description = "Containers matching this pattern will be auto-scaled.")
     private static final String CONTAINER_PATTERN = "containerPattern";
     private Matcher containerPattern;
-    @Property(value = AutoScaledGroupOptions.CONTAINER_PREFIX_DEFAULT, label = "Container name prefix for new containers", description = "New containers will be created with this prefix and an index.")
+    @Property(value = AutoScaledGroupOptions.CONTAINER_PREFIX_DEFAULT, label = "Container name prefix for new containers", description = "New containers will be named with this prefix. The prefix must match containerPattern.")
     private static final String CONTAINER_PREFIX = "containerPrefix";
     private String containerPrefix;
-    @Property(value = AutoScaledGroupOptions.SCALE_CONTAINERS_DEFAULT, label = "Scale containers", description = "true = scale with containers, false = scale with profile assignments.")
+    @Property(value = AutoScaledGroupOptions.SCALE_CONTAINERS_DEFAULT, label = "Scale containers", description = "Allow autoscaler to create, start and remove containers.")
     private static final String SCALE_CONTAINERS = "scaleContainers";
     private Boolean scaleContainers;
-    @Property(value = AutoScaledGroupOptions.DEFAULT_MAX_INSTANCES_PER_HOST_DEFAULT, label = "Default maximum instances per host", description = "Default maximum for instances per host when profile doesn't define it.")
+    @Property(value = AutoScaledGroupOptions.DEFAULT_MAX_INSTANCES_PER_HOST_DEFAULT, label = "Default value for maximum profile instances per host", description = "Default value for maximum profile instances per host when profile requirements don't define it.")
     private static final String DEFAULT_MAX_INSTANCES_PER_HOST = "defaultMaxInstancesPerHost";
     private Integer defaultMaximumInstancesPerHost;
-    @Property(value = AutoScaledGroupOptions.MIN_CONTAINER_COUNT_DEFAULT, label = "Minimum number of containers", description = "Minimum number of applicable containers to perform autoscaling.")
+    @Property(value = AutoScaledGroupOptions.MIN_CONTAINER_COUNT_DEFAULT, label = "Minimum number of containers", description = "Minimum number of applicable containers to perform auto-scaling. Used when scaleContainers is false")
     private static final String MIN_CONTAINER_COUNT = "minContainerCount";
     private Integer minContainerCount;
-    @Property(value = AutoScaledGroupOptions.MAX_DEVIATION_DEFAULT, label = "Maximum deviation, n * average (n >= 0)", description = "If one container has more than average + (n * average) profiles assigned, the excess will be reassigned.")
+    @Property(value = AutoScaledGroupOptions.MAX_DEVIATION_DEFAULT, label = "Maximum deviation = n * average, where n >= 0", description = "If a container has more than average + (n * average) matching profile instances assigned, the excess will be reassigned on other containers.")
     private static final String MAX_DEVIATION = "maxDeviation";
     private Double maxDeviation;
-    @Property(value = AutoScaledGroupOptions.INHERIT_REQUIREMENTS_DEFAULT, label = "Inherit requirements", description = "Profile dependencies will inherit their requirements from parent if their requirements are not set.")
+    @Property(value = AutoScaledGroupOptions.INHERIT_REQUIREMENTS_DEFAULT, label = "Inherit requirements", description = "Profile dependencies will inherit their requirements from parent when their requirements are not set.")
     private static final String INHERIT_REQUIREMENTS = "inheritRequirements";
     private Boolean inheritRequirements;
     @Property(value = AutoScaledGroupOptions.AVERAGE_INSTANCES_PER_CONTAINER_DEFAULT, label = "Desired average profile instance count per container", description = "Desired average profile instance count per container. Negative value equals no value.")
@@ -107,6 +107,9 @@ public final class AutoScaleController extends AbstractComponent implements Grou
     @Property(value = AutoScaledGroupOptions.DRY_RUN_DEFAULT, label = "Do not apply changes", description = "Do not apply any changes.")
     private static final String DRY_RUN = "dryRun";
     private Boolean dryRun;
+    @Property(value = AutoScaledGroupOptions.ROOT_CONTAINER_PATTERN_DEFAULT, label = "Root container name pattern", description = "Only root containers matching this pattern will be included in autoscaling.")
+    private static final String ROOT_CONTAINER_PATTERN = "rootContainerPattern";
+    private Matcher rootContainerPattern;
 
     private AtomicReference<Timer> timer = new AtomicReference<Timer>();
 
@@ -137,6 +140,7 @@ public final class AutoScaleController extends AbstractComponent implements Grou
         this.ignoreErrors = Boolean.parseBoolean(properties.get(IGNORE_ERRORS));
         this.maxContainersPerHost = Integer.parseInt(properties.get(MAX_CONTAINERS_PER_HOST));
         this.dryRun = Boolean.parseBoolean(properties.get(DRY_RUN));
+        this.rootContainerPattern = Pattern.compile(properties.get(ROOT_CONTAINER_PATTERN)).matcher("");
         CuratorFramework curator = this.curator.get();
         enableMasterZkCache(curator);
         group = new ZooKeeperGroup<AutoScalerNode>(curator, ZkPath.AUTO_SCALE_CLUSTER.getPath() + "/" + autoscalerGroupId, AutoScalerNode.class);
@@ -249,7 +253,8 @@ public final class AutoScaleController extends AbstractComponent implements Grou
                 defaultMaximumInstancesPerHost,
                 ignoreErrors,
                 maxContainersPerHost,
-                dryRun);
+                dryRun,
+                rootContainerPattern);
             List<ProfileRequirements> profileRequirements = service.getRequirements().getProfileRequirements();
             AutoScaledGroup autoScaledGroup = new AutoScaledGroup(
                 autoscalerGroupId,

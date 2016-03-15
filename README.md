@@ -18,8 +18,8 @@ Example config:
 
 * scaleContainers = true
 * averageInstancesPerContainer = 50
-* profilePattern = ^.*-auto$
-* containerPattern = ^auto.*$
+* profilePattern = `^.*-auto$`
+* containerPattern = `^auto.*$`
 * containerPrefix = auto
 * maxContainersPerHost = 5
 
@@ -36,21 +36,22 @@ Fuse-autoscaler uses the following parameters in io.fabric8.autoscale PID:
 * **pollTime (long: 15000)**: The number of milliseconds between polls to check if the system still has its requirements satisfied.
 * **autoscalerGroupId ("default")**: The group ID for this autoscaler. You can run multiple autoscalers concurrently as long as they have unique group IDs. If you do, take care that the profilePatterns don't overlap or things might get crazy. See Example 2 below.
 * **scaleContainers (bool: true)**: Allow autoscaler to create, start and remove containers.
-* **profilePattern (regex: `^.*-auto`)**: Only matching profile names are considered for autoscaling.
-* **containerPattern (regex: `^auto.*`)**: Only matching containers are used for profile assignment autoscaling.
+* **profilePattern (regex: `^.*-auto$`)**: Only matching profile names are considered for auto-scaling.
+* **containerPattern (regex: `^auto.*$`)**: Only matching containers are used for auto-scaling.
 * **containerPrefix ("auto")**: Container name prefix used for new containers created by autoscaler. The prefix must match containerPattern. 
 * **defaultMaxInstancesPerHost (int: 1)**: Default value for maximum profile instances per host.
-* **minContainerCount (int: 0)**: Minimum number of applicable containers on which autoscaling can be performed.
-* **maxDeviation (double: 1.0, >= 0)**: If a container has more than x + maximumDeviation * x profiles assigned, the excess profiles will be reassigned. x = matched profile count / applicable container count, rounded up.
+* **minContainerCount (int: 0)**: Minimum number of applicable containers on which auto-scaling can be performed. Used when scaleContainers is false.
+* **maxDeviation (double: 1.0, >= 0)**: If a container has more than n + maximumDeviation * n profiles assigned, the excess profiles will be reassigned. n = matched profile count / applicable container count, rounded up.
 * **inheritRequirements (bool: true)**: Profile dependencies will inherit their requirements from the parent if their requirements are not set. Inherited requirements are transient and won't change your configured requirements.
 * **averageInstancesPerContainer (int: -1)**: The desired average number of profile instances per container when scaling with containers.
-* **maxContainersPerHost (int: 3)**: Maximum allowed number of autoscaled containers per host. Set this to match the resources of your hosts.
-* **ignoreErrors (bool: true)**: Perform autoscaling even when all the requirements couldn't be satisfied.
+* **maxContainersPerHost (int: 3)**: Maximum allowed number of auto-scaled containers per host. Set this to suit the available resources of your hosts.
+* **ignoreErrors (bool: true)**: Perform auto-scaling even when all the requirements couldn't be satisfied.
 * **dryRun (bool: false)**: Do not apply any changes, only log them. Useful for safe testing on a live system.
+* **rootContainerPattern (regex: `.*`)**: Only root containers matching this pattern will be included in autoscaling.
 
 ## Usage
 
-Create a new profile, add com.github.yuruki/fuse-autoscale bundle to it and add *fabric* profile as a parent. Then assign your profile on one or more Fabric root containers. Add io.fabric8.autoscale.properties with the autoscale configuration to the profile.
+Create a new profile, add com.github.yuruki/fuse-autoscale bundle to it and add *fabric* profile as a parent. Then assign your profile on one or more Fabric root containers. Add io.fabric8.autoscale.properties with the fuse-autoscale configuration to the profile.
 
 ### Maintenance mode
 

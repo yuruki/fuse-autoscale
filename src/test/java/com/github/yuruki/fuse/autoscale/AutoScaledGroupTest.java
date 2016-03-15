@@ -318,6 +318,55 @@ public class AutoScaledGroupTest {
         assertEquals("Wrong profile count", 1, oneContainerProfiles.size());
     }
 
+    @Test
+    public void testRootContainerScoping() throws Exception {
+        List<ProfileRequirements> profileRequirements;
+
+        // Set up profiles and versions
+        MockProfile min1Profile = new MockProfile("min1-auto");
+        MockVersion version = new MockVersion("1.0");
+        version.addProfile(min1Profile);
+
+        // Set up initial containers
+        List<Container> containerList = new ArrayList<>();
+        MockContainer oneContainer = new MockContainer("auto1", true, "host1");
+        oneContainer.setVersion(version);
+        containerList.add(oneContainer);
+        MockContainer otherContainer = new MockContainer("auto2", true, "host2");
+        otherContainer.setVersion(version);
+        otherContainer.addProfiles(min1Profile);
+        containerList.add(otherContainer);
+
+        // Set up profile requirements
+        profileRequirements = new ArrayList<>();
+        profileRequirements.add(new ProfileRequirements(min1Profile.getId()).minimumInstances(1).maximumInstances(1)); // Minimum instances
+
+        // Set up options
+        AutoScaledGroupOptions options = new AutoScaledGroupOptions()
+            .containerPattern(Pattern.compile("^auto.*$").matcher(""))
+            .rootContainerPattern(Pattern.compile("^host[^2]$").matcher(""))
+            .profilePattern(Pattern.compile("^.*-auto$").matcher(""))
+            .scaleContainers(false)
+            .inheritRequirements(true)
+            .containerPrefix("auto")
+            .minContainerCount(1)
+            .defaultMaxInstancesPerHost(1);
+
+        // Set up auto-scaled group
+        AutoScaledGroup autoScaledGroup = new AutoScaledGroup("test", options, containerList.toArray(new Container[containerList.size()]), profileRequirements.toArray(new ProfileRequirements[profileRequirements.size()]), new ContainerFactory(fabricService));
+        autoScaledGroup.apply(5000);
+
+        // Matching container should now have one profile added
+        List<Profile> oneContainerProfiles = Arrays.asList(oneContainer.getProfiles());
+        assertTrue("oneContainer doesn't have min1Profile", oneContainerProfiles.contains(min1Profile));
+        assertEquals("Wrong profile count on oneContainer", 1, oneContainerProfiles.size());
+
+        // Matching container on non-matching root container should remain untouched
+        List<Profile> otherContainerProfiles = Arrays.asList(otherContainer.getProfiles());
+        assertTrue("otherContainer doesn't have min1Profile", otherContainerProfiles.contains(min1Profile));
+        assertEquals("Wrong profile count on otherContainer", 1, otherContainerProfiles.size());
+    }
+
     private class TestAppender extends AppenderSkeleton {
         private final List<LoggingEvent> log = new ArrayList<>();
 

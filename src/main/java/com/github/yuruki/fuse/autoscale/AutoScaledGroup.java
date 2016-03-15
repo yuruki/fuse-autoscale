@@ -97,30 +97,26 @@ public class AutoScaledGroup extends ProfileContainer {
     private void processContainers(final AutoScaledGroupOptions options, final Container... containers) throws Exception {
         childMap.clear(); // Reset hosts
 
-        // Collect root container hosts
-        for (Container container : containers) {
-            if (container.isRoot()) {
-                addChild(new AutoScaledHost(container.getIp(), container));
-            }
-        }
-
         // Collect all applicable containers
-        if (options.isScaleContainers()) {
-            for (Container container : containers) {
-                if (options.getContainerPattern().reset(container.getId()).matches()) {
-                    AutoScaledContainer.newAutoScaledContainer(this, container, containerFactory);
+        for (Container container : containers) {
+            Container rootContainer = container.isRoot() ? container : container.getParent();
+            if (matchesRootContainerPattern(rootContainer.getId())) {
+                if (!hasChild(rootContainer.getId())) {
+                    addChild(new AutoScaledHost(rootContainer.getIp(), rootContainer));
                 }
-            }
-        } else {
-            for (Container container : containers) {
-                if (options.getContainerPattern().reset(container.getId()).matches() && container.isAlive()) {
-                    AutoScaledContainer.newAutoScaledContainer(this, container, containerFactory);
+                if (options.isScaleContainers() && matchesContainerPattern(container.getId())
+                    || !options.isScaleContainers() && matchesContainerPattern(container.getId()) && container.isAlive()) {
+                    AutoScaledContainer.createAutoScaledContainer(this, container, containerFactory);
                 }
-            }
-            if (getGrandChildren().size() < options.getMinContainerCount()) {
-                throw new Exception("Not enough containers available (" + getGrandChildren().size() + "), " + options.getMinContainerCount() + " required");
             }
         }
+        if (!options.isScaleContainers() && getGrandChildren().size() < options.getMinContainerCount()) {
+            throw new Exception("Not enough containers available (" + getGrandChildren().size() + "), " + options.getMinContainerCount() + " required");
+        }
+    }
+
+    private boolean matchesContainerPattern(String containerId) {
+        return options.getContainerPattern().reset(containerId).matches();
     }
 
     private static int calculateRequiredContainers(int profileInstances, int requiredHosts, int desiredAverageInstancesPerContainer) {
@@ -180,7 +176,7 @@ public class AutoScaledGroup extends ProfileContainer {
             for (int i = 0; i < containerDelta; i++) {
                 try {
                     String containerId = createContainerId();
-                    AutoScaledContainer.newAutoScaledContainer(this, containerId, i < hostDelta, containerFactory);
+                    AutoScaledContainer.createAutoScaledContainer(this, containerId, i < hostDelta, containerFactory);
                 } catch (Exception e) {
                     if (options.isIgnoreErrors()) {
                         LOGGER.error("Failed to create new auto-scaled container. This exception is ignored", e);
@@ -208,7 +204,7 @@ public class AutoScaledGroup extends ProfileContainer {
     }
 
     private String createContainerId() throws Exception {
-        if (options.getContainerPattern().reset(options.getContainerPrefix()).matches()) {
+        if (matchesContainerPattern(options.getContainerPrefix())) {
             Set<String> containerNames = new HashSet<>();
             for (ProfileContainer container : getEveryGrandChild()) {
                 containerNames.add(container.getId());
@@ -400,6 +396,10 @@ public class AutoScaledGroup extends ProfileContainer {
 
     public boolean matchesProfilePattern(String profileId) {
         return options.getProfilePattern().reset(profileId).matches();
+    }
+
+    public boolean matchesRootContainerPattern(String containerId) {
+        return options.getRootContainerPattern().reset(containerId).matches();
     }
 
     private static final class ProfileRequirementsProcessingResult {

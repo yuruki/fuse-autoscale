@@ -21,21 +21,25 @@ public class MockContainer implements Container {
 
     private List<Profile> profileList = new ArrayList<>();
     private Boolean alive;
-    private String ipAddress;
+    private String host;
     private Boolean root;
     private String versionId;
     private Version version;
     private Boolean destroyed;
+    private Container parent;
 
-    public MockContainer(String id, boolean alive, String ipAddress, boolean root) {
+    public MockContainer(String id, boolean alive, String host, boolean root) {
         this.id = id;
         this.alive = alive;
-        this.ipAddress = ipAddress;
+        this.host = host;
         this.root = root;
+        if (!root) {
+            this.parent = new MockContainer(host, true, host, true); // Mock a root container based on host ID
+        }
     }
 
-    public MockContainer(String id, boolean alive, String ipAddress) {
-        this(id, alive, ipAddress, false);
+    public MockContainer(String id, boolean alive, String host) {
+        this(id, alive, host, false);
     }
 
     @Override
@@ -55,7 +59,7 @@ public class MockContainer implements Container {
 
     @Override
     public Container getParent() {
-        return null;
+        return parent;
     }
 
     @Override
@@ -214,7 +218,7 @@ public class MockContainer implements Container {
 
     @Override
     public String getIp() {
-        return ipAddress;
+        return host;
     }
 
     @Override

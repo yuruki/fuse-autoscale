@@ -44,6 +44,8 @@ public class AutoScaledGroupOptions {
     public static final String SCALE_CONTAINERS_DEFAULT = "true";
     private boolean dryRun = false;
     public static final String DRY_RUN_DEFAULT = "false";
+    private Matcher rootContainerPattern = Pattern.compile(".*").matcher("");
+    public static final String ROOT_CONTAINER_PATTERN_DEFAULT = ".*";
 
     public AutoScaledGroupOptions() {}
 
@@ -59,7 +61,8 @@ public class AutoScaledGroupOptions {
         int defaultMaxInstancesPerHost,
         boolean ignoreErrors,
         int maxContainersPerHost,
-        boolean dryRun) {
+        boolean dryRun,
+        Matcher rootContainerPattern) {
         this.containerPattern = containerPattern;
         this.profilePattern = profilePattern;
         this.scaleContainers = scaleContainers;
@@ -72,6 +75,7 @@ public class AutoScaledGroupOptions {
         this.ignoreErrors = ignoreErrors;
         this.maxContainersPerHost = maxContainersPerHost;
         this.dryRun = dryRun;
+        this.rootContainerPattern = rootContainerPattern;
     }
 
     public AutoScaledGroupOptions containerPattern(Matcher containerPattern) {
@@ -131,6 +135,11 @@ public class AutoScaledGroupOptions {
 
     public AutoScaledGroupOptions dryRun(boolean dryRun) {
         setDryRun(dryRun);
+        return this;
+    }
+
+    public AutoScaledGroupOptions rootContainerPattern(Matcher rootContainerPattern) {
+        setRootContainerPattern(rootContainerPattern);
         return this;
     }
 
@@ -228,5 +237,13 @@ public class AutoScaledGroupOptions {
 
     public void setDryRun(boolean dryRun) {
         this.dryRun = dryRun;
+    }
+
+    public Matcher getRootContainerPattern() {
+        return rootContainerPattern;
+    }
+
+    public void setRootContainerPattern(Matcher rootContainerPattern) {
+        this.rootContainerPattern = rootContainerPattern;
     }
 }
