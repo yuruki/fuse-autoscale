@@ -63,7 +63,7 @@ Set `scaleContainers` and `maxDeviation` back to their original values when you 
 
 ## Caveats
 
-Autoscaler can only create child containers for now. Feel free to add the other container providers to the component.
+Autoscaler can only create child containers for now. Feel free to add other container providers to the component.
 
 ## Example 1
 
@@ -108,7 +108,7 @@ io.fabric8.autoscale-worker.properties:
 * defaultMaxInstancesPerHost = 1
 * inheritRequirements = true
 * maxContainersPerHost = 3
-* minContainerCount = 6
+* minContainerCount = 4
 * averageInstancesPerContainer = 30
 * maxDeviation = 0.5
 
@@ -116,6 +116,6 @@ We won't configure maximum instances per host in the profile requirements; autos
 
 The broker autoscaler will consider profiles that match "mq-broker-\*-testbroker" and assign them on containers starting with "broker" according to profile requirements. We want at most one container per host and one broker profile per container. When in maintenance mode (scaleContainers=false) we want the autoscaler to stay passive if there are less than two broker containers available.
 
-The worker autoscaler will consider profiles that match "company-template-\*-test" or "company-bundle-\*-test" and assign them on containers starting with "worker" according to profile requirements. We want at most two containers per host and on average 40 worker profiles per container (at most 60 per container). When in maintenance mode we want the autoscaler to stay passive if there are less than four worker containers available.
+The worker autoscaler will consider profiles that match "company-template-\*-test" or "company-bundle-\*-test" and assign them on containers starting with "worker" according to profile requirements. We want at most two containers per host and on average 30 worker profiles per container (at most 45 per container). When in maintenance mode we want the autoscaler to stay passive if there are less than four worker containers available.
 
 Broker and worker container lifecycles will be controlled by their associated autoscalers.
