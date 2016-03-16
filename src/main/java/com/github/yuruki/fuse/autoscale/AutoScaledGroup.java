@@ -16,7 +16,6 @@
 package com.github.yuruki.fuse.autoscale;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,7 +42,6 @@ public class AutoScaledGroup extends ProfileContainer {
 
     private Map<String, ProfileRequirements> profileRequirementsMap = new HashMap<>();
     private Map<String, ProfileRequirements> prunedProfileRequirementsMap = new HashMap<>();
-    private List<Container> containerList = new ArrayList<>();
     private int profileInstances;
     private int requiredHosts;
     private Long maxInstancesPerContainer;
@@ -95,8 +93,6 @@ public class AutoScaledGroup extends ProfileContainer {
     }
 
     private void processContainers(final AutoScaledGroupOptions options, final Container... containers) throws Exception {
-        childMap.clear(); // Reset hosts
-
         // Collect all applicable containers
         for (Container container : containers) {
             Container rootContainer = container.isRoot() ? container : container.getParent();
@@ -354,7 +350,7 @@ public class AutoScaledGroup extends ProfileContainer {
     @Override
     public void removeProfile(String profile) throws Exception {
         profileRequirementsMap.remove(profile);
-        updateGroup(profileRequirementsMap.values().toArray(new ProfileRequirements[prunedProfileRequirementsMap.size()]), containerList.toArray(new Container[containerList.size()]));
+        updateGroup(profileRequirementsMap.values().toArray(new ProfileRequirements[profileRequirementsMap.size()]));
         applyProfileRequirements();
     }
 
@@ -427,7 +423,7 @@ public class AutoScaledGroup extends ProfileContainer {
     }
 
     private void setContainers(Container[] containers) throws Exception {
-        containerList = Arrays.asList(containers);
+        childMap.clear(); // Reset hosts
         processContainers(options, containers);
     }
 }
