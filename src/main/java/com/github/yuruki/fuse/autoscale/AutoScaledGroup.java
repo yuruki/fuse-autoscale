@@ -97,7 +97,7 @@ public class AutoScaledGroup extends ProfileContainer {
         for (Container container : containers) {
             Container rootContainer = container.isRoot() ? container : container.getParent();
             if (matchesRootContainerPattern(rootContainer.getId())) {
-                if (!hasChild(rootContainer.getId())) {
+                if (!hasChild(rootContainer.getIp())) {
                     addChild(new AutoScaledHost(rootContainer.getIp(), rootContainer));
                 }
                 if (options.isScaleContainers() && matchesContainerPattern(container.getId())

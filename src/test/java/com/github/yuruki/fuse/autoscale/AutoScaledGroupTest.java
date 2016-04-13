@@ -344,7 +344,7 @@ public class AutoScaledGroupTest {
         // Set up options
         AutoScaledGroupOptions options = new AutoScaledGroupOptions()
             .containerPattern(Pattern.compile("^auto.*$").matcher(""))
-            .rootContainerPattern(Pattern.compile("^host[^2]$").matcher(""))
+            .rootContainerPattern(Pattern.compile("^host1$").matcher(""))
             .profilePattern(Pattern.compile("^.*-auto$").matcher(""))
             .scaleContainers(false)
             .inheritRequirements(true)

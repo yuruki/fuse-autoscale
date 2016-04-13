@@ -110,8 +110,8 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
     }
 
     private void setHost(String hostId, Container rootContainer) {
-        if (group.childMap.containsKey(hostId)) {
-            setHost(group.childMap.get(hostId));
+        if (group.hasChild(hostId)) {
+            setHost(group.getChild(hostId));
         } else {
             setHost(new AutoScaledHost(hostId, rootContainer));
         }
