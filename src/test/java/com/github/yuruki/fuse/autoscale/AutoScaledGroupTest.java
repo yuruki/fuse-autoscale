@@ -324,8 +324,10 @@ public class AutoScaledGroupTest {
 
         // Set up profiles and versions
         MockProfile min1Profile = new MockProfile("min1-auto");
+        MockProfile otherProfile = new MockProfile("other-auto");
         MockVersion version = new MockVersion("1.0");
         version.addProfile(min1Profile);
+        version.addProfile(otherProfile);
 
         // Set up initial containers
         List<Container> containerList = new ArrayList<>();
@@ -334,17 +336,26 @@ public class AutoScaledGroupTest {
         containerList.add(oneContainer);
         MockContainer otherContainer = new MockContainer("auto2", true, "host2");
         otherContainer.setVersion(version);
-        otherContainer.addProfiles(min1Profile);
+        otherContainer.addProfiles(otherProfile);
         containerList.add(otherContainer);
+        MockContainer thirdContainer = new MockContainer("auto3", true, "host1");
+        thirdContainer.setVersion(version);
+        thirdContainer.addProfiles(otherProfile);
+        containerList.add(thirdContainer);
+        MockContainer unmatchedContainer = new MockContainer("auto4", true, "node1");
+        unmatchedContainer.setVersion(version);
+        unmatchedContainer.addProfiles(min1Profile);
+        containerList.add(unmatchedContainer);
 
         // Set up profile requirements
         profileRequirements = new ArrayList<>();
-        profileRequirements.add(new ProfileRequirements(min1Profile.getId()).minimumInstances(1).maximumInstances(1)); // Minimum instances
+        profileRequirements.add(new ProfileRequirements(min1Profile.getId()).minimumInstances(1).maximumInstances(1));
+        profileRequirements.add(new ProfileRequirements(otherProfile.getId()).minimumInstances(2).maximumInstances(2));
 
         // Set up options
         AutoScaledGroupOptions options = new AutoScaledGroupOptions()
             .containerPattern(Pattern.compile("^auto.*$").matcher(""))
-            .rootContainerPattern(Pattern.compile("^host1$").matcher(""))
+            .rootContainerPattern(Pattern.compile("^host.*$").matcher(""))
             .profilePattern(Pattern.compile("^.*-auto$").matcher(""))
             .scaleContainers(false)
             .inheritRequirements(true)
@@ -362,9 +373,9 @@ public class AutoScaledGroupTest {
         assertEquals("Wrong profile count on oneContainer", 1, oneContainerProfiles.size());
 
         // Matching container on non-matching root container should remain untouched
-        List<Profile> otherContainerProfiles = Arrays.asList(otherContainer.getProfiles());
-        assertTrue("otherContainer doesn't have min1Profile", otherContainerProfiles.contains(min1Profile));
-        assertEquals("Wrong profile count on otherContainer", 1, otherContainerProfiles.size());
+        List<Profile> unmatchedContainerProfiles = Arrays.asList(unmatchedContainer.getProfiles());
+        assertTrue("unmatchedContainer doesn't have min1Profile", unmatchedContainerProfiles.contains(min1Profile));
+        assertEquals("Wrong profile count on unmatchedContainer", 1, unmatchedContainerProfiles.size());
     }
 
     private class TestAppender extends AppenderSkeleton {

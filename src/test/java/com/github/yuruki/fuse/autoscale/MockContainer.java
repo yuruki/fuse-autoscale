@@ -218,7 +218,7 @@ public class MockContainer implements Container {
 
     @Override
     public String getIp() {
-        return host;
+        return host + ".ip";
     }
 
     @Override
