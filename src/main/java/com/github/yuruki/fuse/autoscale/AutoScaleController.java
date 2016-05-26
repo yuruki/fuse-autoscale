@@ -32,7 +32,6 @@ import io.fabric8.api.ProfileRequirements;
 import io.fabric8.api.jcip.GuardedBy;
 import io.fabric8.api.jcip.ThreadSafe;
 import io.fabric8.api.scr.AbstractComponent;
-import io.fabric8.api.scr.ValidatingReference;
 import io.fabric8.common.util.Closeables;
 import io.fabric8.groups.Group;
 import io.fabric8.groups.GroupListener;
@@ -59,10 +58,10 @@ import org.slf4j.LoggerFactory;
 public final class AutoScaleController extends AbstractComponent implements GroupListener<AutoScalerNode> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AutoScaleController.class);
 
-    @Reference(referenceInterface = CuratorFramework.class, bind = "bindCurator", unbind = "unbindCurator")
-    private final ValidatingReference<CuratorFramework> curator = new ValidatingReference<CuratorFramework>();
-    @Reference(referenceInterface = FabricService.class, bind = "bindFabricService", unbind = "unbindFabricService")
-    private final ValidatingReference<FabricService> fabricService = new ValidatingReference<FabricService>();
+    @Reference(referenceInterface = CuratorFramework.class)
+    private CuratorFramework curator;
+    @Reference(referenceInterface = FabricService.class)
+    private FabricService fabricService;
 
     @Property(value = "15000", label = "Poll period", description = "The number of milliseconds between polls to check if the system still has its requirements satisfied.")
     private static final String POLL_TIME = "pollTime";
@@ -140,7 +139,6 @@ public final class AutoScaleController extends AbstractComponent implements Grou
         this.maxContainersPerHost = Integer.parseInt(properties.get(MAX_CONTAINERS_PER_HOST));
         this.dryRun = Boolean.parseBoolean(properties.get(DRY_RUN));
         this.rootContainerPattern = Pattern.compile(properties.get(ROOT_CONTAINER_PATTERN)).matcher("");
-        CuratorFramework curator = this.curator.get();
         enableMasterZkCache(curator);
         group = new ZooKeeperGroup<AutoScalerNode>(curator, ZkPath.AUTO_SCALE_CLUSTER.getPath() + "/" + autoscalerGroupId, AutoScalerNode.class);
         group.add(this);
@@ -161,7 +159,7 @@ public final class AutoScaleController extends AbstractComponent implements Grou
 
     @Override
     public void groupEvent(Group<AutoScalerNode> group, GroupEvent event) {
-        DataStore dataStore = fabricService.get().adapt(DataStore.class);
+        DataStore dataStore = fabricService.adapt(DataStore.class);
         switch (event) {
             case CONNECTED:
             case CHANGED:
@@ -169,7 +167,7 @@ public final class AutoScaleController extends AbstractComponent implements Grou
                     AutoScalerNode state = createState();
                     try {
                         if (group.isMaster()) {
-                            enableMasterZkCache(curator.get());
+                            enableMasterZkCache(curator);
                             LOGGER.info("AutoScaleController is the master");
                             group.update(state);
                             dataStore.trackConfiguration(runnable);
@@ -187,8 +185,8 @@ public final class AutoScaleController extends AbstractComponent implements Grou
                     }
                 } else {
                     LOGGER.info("Not valid with master: " + group.isMaster()
-                            + " fabric: " + fabricService.get()
-                            + " curator: " + curator.get());
+                            + " fabric: " + fabricService
+                            + " curator: " + curator);
                 }
                 break;
             case DISCONNECTED:
@@ -197,17 +195,17 @@ public final class AutoScaleController extends AbstractComponent implements Grou
     }
 
 
-    protected void enableMasterZkCache(CuratorFramework curator) {
+    private void enableMasterZkCache(CuratorFramework curator) {
         zkMasterCache = new ZooKeeperMasterCache(curator);
     }
 
-    protected void disableMasterZkCache() {
+    private void disableMasterZkCache() {
         if (zkMasterCache != null) {
             zkMasterCache = null;
         }
     }
 
-    protected void enableTimer() {
+    private void enableTimer() {
         Timer newTimer = new Timer("fabric8-autoscaler");
         if (timer.compareAndSet(null, newTimer)) {
             TimerTask timerTask = new TimerTask() {
@@ -221,7 +219,7 @@ public final class AutoScaleController extends AbstractComponent implements Grou
         }
     }
 
-    protected void disableTimer() {
+    private void disableTimer() {
         Timer oldValue = timer.getAndSet(null);
         if (oldValue != null) {
             oldValue.cancel();
@@ -236,8 +234,7 @@ public final class AutoScaleController extends AbstractComponent implements Grou
 
     private void autoScale() {
         try {
-            FabricService service = fabricService.getOptional();
-            if (service == null) {
+            if (fabricService == null) {
                 throw new Exception("FabricService not available");
             }
             AutoScaledGroupOptions options = new AutoScaledGroupOptions(
@@ -254,13 +251,13 @@ public final class AutoScaleController extends AbstractComponent implements Grou
                 maxContainersPerHost,
                 dryRun,
                 rootContainerPattern);
-            List<ProfileRequirements> profileRequirements = service.getRequirements().getProfileRequirements();
+            List<ProfileRequirements> profileRequirements = fabricService.getRequirements().getProfileRequirements();
             AutoScaledGroup autoScaledGroup = new AutoScaledGroup(
                 autoscalerGroupId,
                 options,
-                service.getContainers(),
+                fabricService.getContainers(),
                 profileRequirements.toArray(new ProfileRequirements[profileRequirements.size()]),
-                new ContainerFactory(service));
+                new ContainerFactory(fabricService));
             autoScaledGroup.apply();
         } catch (Exception e) {
             LOGGER.error("AutoScaledGroup {} canceled", autoscalerGroupId, e);
@@ -268,23 +265,6 @@ public final class AutoScaleController extends AbstractComponent implements Grou
     }
 
     private AutoScalerNode createState() {
-        AutoScalerNode state = new AutoScalerNode();
-        return state;
-    }
-
-    void bindFabricService(FabricService fabricService) {
-        this.fabricService.bind(fabricService);
-    }
-
-    void unbindFabricService(FabricService fabricService) {
-        this.fabricService.unbind(fabricService);
-    }
-
-    void bindCurator(CuratorFramework curator) {
-        this.curator.bind(curator);
-    }
-
-    void unbindCurator(CuratorFramework curator) {
-        this.curator.unbind(curator);
+        return new AutoScalerNode();
     }
 }
