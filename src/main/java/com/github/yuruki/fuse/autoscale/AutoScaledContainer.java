@@ -216,7 +216,7 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
         }
 
         // Apply possible changes
-        if (!resultSet.equals(currentProfiles) || (container != null && !container.isAlive())) {
+        if (!resultSet.equals(currentProfiles) || (container != null && !container.isAlive() && getProfileCount() > 0)) {
             List<String> sortedResult = new LinkedList<>(resultSet);
             Collections.sort(sortedResult);
             if (container != null) {
@@ -235,7 +235,7 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
                 } else {
                     LOGGER.info("Updating container {}: added: {} removed: {}", id, Arrays.join(", ", additions), Arrays.join(", ", removals));
                     container.setProfiles(profiles.toArray(new Profile[profiles.size()]));
-                    if (!container.isAlive()) {
+                    if (!container.isAlive() && getProfileCount() > 0) { // Only auto-start containers with managed profiles
                         LOGGER.info("Starting container {}", id);
                         container.start();
                     }
