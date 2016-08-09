@@ -40,7 +40,7 @@ Fuse-autoscale uses the following parameters in io.fabric8.autoscale PID:
 * **containerPattern (regex: `^auto.*$`)**: Only matching containers are used for auto-scaling.
 * **containerPrefix ("auto")**: Container name prefix used for new containers created by autoscaler. The prefix must match containerPattern.
 * **defaultMaxInstancesPerHost (int: 1)**: Default value for maximum profile instances per host.
-* **minContainerCount (int: 0)**: Minimum number of applicable containers on which auto-scaling can be performed. Used when scaleContainers is false.
+* **minContainerCount (int: 1)**: Minimum number of applicable containers on which auto-scaling can be performed. Used when scaleContainers is false.
 * **maxDeviation (double: 1.0, >= 0)**: If a container has more than n + maximumDeviation * n profiles assigned, the excess profiles will be reassigned. n = matched profile count / applicable container count, rounded up.
 * **inheritRequirements (bool: true)**: Profile dependencies will inherit their requirements from the parent if their requirements are not set. Inherited requirements are transient and won't change your configured requirements.
 * **averageInstancesPerContainer (int: -1)**: The desired average number of profile instances per container when scaling with containers.

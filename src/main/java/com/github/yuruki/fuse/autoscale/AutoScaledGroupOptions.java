@@ -36,8 +36,8 @@ public class AutoScaledGroupOptions {
     public static final String MAX_CONTAINERS_PER_HOST_DEFAULT = "3";
     private double maxDeviation = 1.0;
     public static final String MAX_DEVIATION_DEFAULT = "1.0";
-    private int minContainerCount = 0;
-    public static final String MIN_CONTAINER_COUNT_DEFAULT = "0";
+    private int minContainerCount = 1;
+    public static final String MIN_CONTAINER_COUNT_DEFAULT = "1";
     private Matcher profilePattern = Pattern.compile("^.*-auto").matcher("");
     public static final String PROFILE_PATTERN_DEFAULT = "^.*-auto";
     private boolean scaleContainers = true;
