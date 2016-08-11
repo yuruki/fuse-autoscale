@@ -1,17 +1,17 @@
-/**
- *  Copyright 2016 Jyrki Ruuskanen
- *
- *  Jyrki Ruuskanen licenses this file to you under the Apache License, version
- *  2.0 (the "License"); you may not use this file except in compliance
- *  with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- *  implied.  See the License for the specific language governing
- *  permissions and limitations under the License.
+/*
+   Copyright 2016 Jyrki Ruuskanen
+
+   Jyrki Ruuskanen licenses this file to you under the Apache License, version
+   2.0 (the "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+   implied.  See the License for the specific language governing
+   permissions and limitations under the License.
  */
 package com.github.yuruki.fuse.autoscale;
 
@@ -33,7 +33,7 @@ import io.fabric8.api.ProfileRequirements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AutoScaledGroup extends ProfileContainer {
+class AutoScaledGroup extends ProfileContainer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AutoScaledGroup.class);
 
@@ -46,7 +46,7 @@ public class AutoScaledGroup extends ProfileContainer {
     private int requiredHosts;
     private Long maxInstancesPerContainer;
 
-    public AutoScaledGroup(final String groupId, final AutoScaledGroupOptions options, final Container[] containers, final ProfileRequirements[] profiles, ContainerFactory containerFactory) throws Exception {
+    AutoScaledGroup(final String groupId, final AutoScaledGroupOptions options, final Container[] containers, final ProfileRequirements[] profiles, ContainerFactory containerFactory) throws Exception {
         this.id = groupId;
         this.options = options;
         this.containerFactory = containerFactory;
@@ -354,15 +354,15 @@ public class AutoScaledGroup extends ProfileContainer {
         applyProfileRequirements();
     }
 
-    public long getMaxInstancesPerContainer() {
+    long getMaxInstancesPerContainer() {
         return maxInstancesPerContainer;
     }
 
-    public void apply() {
+    void apply() {
         apply(0);
     }
 
-    public void apply(long maxWaitInMillis) {
+    void apply(long maxWaitInMillis) {
         Set<ProfileContainer> containers = new HashSet<>(getEveryGrandChild());
         if (containers.isEmpty()) {
             LOGGER.debug("No changes to apply");
@@ -382,28 +382,28 @@ public class AutoScaledGroup extends ProfileContainer {
         }
     }
 
-    public AutoScaledGroupOptions getOptions() {
+    AutoScaledGroupOptions getOptions() {
         return options;
     }
 
-    public boolean hasRequirements(String profileId) {
+    boolean hasRequirements(String profileId) {
         return prunedProfileRequirementsMap.containsKey(profileId);
     }
 
-    public boolean matchesProfilePattern(String profileId) {
+    boolean matchesProfilePattern(String profileId) {
         return options.getProfilePattern().reset(profileId).matches();
     }
 
-    public boolean matchesRootContainerPattern(String containerId) {
+    private boolean matchesRootContainerPattern(String containerId) {
         return options.getRootContainerPattern().reset(containerId).matches();
     }
 
     private static final class ProfileRequirementsProcessingResult {
-        public final Map<String, ProfileRequirements> profileRequirementsMap;
-        public final int profileInstances;
-        public final int requiredHosts;
+        final Map<String, ProfileRequirements> profileRequirementsMap;
+        final int profileInstances;
+        final int requiredHosts;
 
-        public ProfileRequirementsProcessingResult(Map<String, ProfileRequirements> profileRequirementsMap, int profileInstances, int requiredHosts) {
+        ProfileRequirementsProcessingResult(Map<String, ProfileRequirements> profileRequirementsMap, int profileInstances, int requiredHosts) {
             this.profileRequirementsMap = new HashMap<>(profileRequirementsMap);
             this.profileInstances = profileInstances;
             this.requiredHosts = requiredHosts;

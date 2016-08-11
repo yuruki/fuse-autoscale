@@ -1,20 +1,20 @@
-/**
- *  Copyright 2005-2015 Red Hat, Inc.
- *
- *  Red Hat licenses this file to you under the Apache License, version
- *  2.0 (the "License"); you may not use this file except in compliance
- *  with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- *  implied.  See the License for the specific language governing
- *  permissions and limitations under the License.
- *
- *  MODIFICATION: This file is from jboss-fuse/fabric8 project.
- *  It has been modified for fuse-autoscale project by GitHub user yuruki.
+/*
+   Copyright 2005-2015 Red Hat, Inc.
+
+   Red Hat licenses this file to you under the Apache License, version
+   2.0 (the "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+   implied.  See the License for the specific language governing
+   permissions and limitations under the License.
+
+   MODIFICATION: This file is from jboss-fuse/fabric8 project.
+   It has been modified for fuse-autoscale project by GitHub user yuruki.
  */
 package com.github.yuruki.fuse.autoscale;
 
@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
  * profiles according to their requirements defined via
  * {@link FabricService#setRequirements(io.fabric8.api.FabricRequirements)}
  */
+@SuppressWarnings("WeakerAccess")
 @ThreadSafe
 @Component(name = "io.fabric8.autoscale", label = "Fuse Autoscaler", immediate = true, policy = ConfigurationPolicy.REQUIRE, metatype = true)
 public final class AutoScaleController extends AbstractComponent implements GroupListener<AutoScalerNode> {
@@ -63,6 +64,9 @@ public final class AutoScaleController extends AbstractComponent implements Grou
     @Reference(referenceInterface = FabricService.class)
     private FabricService fabricService;
 
+    @Property(value = "true", label = "Enable autoscaling", description = "Enable autoscaling.")
+    private static final String ENABLE_AUTOSCALE = "enableAutoscale";
+    private Boolean enableAutoscale;
     @Property(value = "15000", label = "Poll period", description = "The number of milliseconds between polls to check if the system still has its requirements satisfied.")
     private static final String POLL_TIME = "pollTime";
     private Long pollTime;
@@ -109,7 +113,7 @@ public final class AutoScaleController extends AbstractComponent implements Grou
     private static final String ROOT_CONTAINER_PATTERN = "rootContainerPattern";
     private Matcher rootContainerPattern;
 
-    private AtomicReference<Timer> timer = new AtomicReference<Timer>();
+    private AtomicReference<Timer> timer = new AtomicReference<>();
 
     @GuardedBy("volatile")
     private volatile Group<AutoScalerNode> group;
@@ -124,6 +128,7 @@ public final class AutoScaleController extends AbstractComponent implements Grou
 
     @Activate
     void activate(final Map<String, String> properties) {
+        this.enableAutoscale = Boolean.parseBoolean(properties.get(ENABLE_AUTOSCALE));
         this.pollTime = Long.parseLong(properties.get(POLL_TIME));
         this.profilePattern = Pattern.compile(properties.get(PROFILE_PATTERN)).matcher("");
         this.containerPattern = Pattern.compile(properties.get(CONTAINER_PATTERN)).matcher("");
@@ -139,11 +144,15 @@ public final class AutoScaleController extends AbstractComponent implements Grou
         this.maxContainersPerHost = Integer.parseInt(properties.get(MAX_CONTAINERS_PER_HOST));
         this.dryRun = Boolean.parseBoolean(properties.get(DRY_RUN));
         this.rootContainerPattern = Pattern.compile(properties.get(ROOT_CONTAINER_PATTERN)).matcher("");
-        enableMasterZkCache(curator);
-        group = new ZooKeeperGroup<AutoScalerNode>(curator, ZkPath.AUTO_SCALE_CLUSTER.getPath() + "/" + autoscalerGroupId, AutoScalerNode.class);
-        group.add(this);
-        group.update(createState());
-        group.start();
+        if (enableAutoscale) {
+            enableMasterZkCache(curator);
+            group = new ZooKeeperGroup<>(curator, ZkPath.AUTO_SCALE_CLUSTER.getPath() + "/" + autoscalerGroupId, AutoScalerNode.class);
+            group.add(this);
+            group.update(createState());
+            group.start();
+        } else {
+            LOGGER.warn("Autoscaling is disabled (enableAutoscale = false)");
+        }
         activateComponent();
     }
 

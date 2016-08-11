@@ -23,7 +23,7 @@ import io.fabric8.api.PortService;
 import io.fabric8.api.ProfileRequirements;
 import io.fabric8.api.Version;
 
-public class MockFabricService implements FabricService {
+class MockFabricService implements FabricService {
     @Override
     public <T> T adapt(Class<T> type) {
         return null;

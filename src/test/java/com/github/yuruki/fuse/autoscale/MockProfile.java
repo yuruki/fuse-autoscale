@@ -6,11 +6,11 @@ import java.util.Set;
 
 import io.fabric8.api.Profile;
 
-public class MockProfile implements Profile {
+class MockProfile implements Profile {
 
     private final String id;
 
-    public MockProfile(String id) {
+    MockProfile(String id) {
         this.id = id;
     }
 

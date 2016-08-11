@@ -33,6 +33,7 @@ Fuse-autoscale will adjust matching profile assignments on containers matching t
 
 Fuse-autoscale uses the following parameters in io.fabric8.autoscale PID:
 
+* **enableAutoscale (bool: true)**: Enable autoscaling.
 * **pollTime (long: 15000)**: The number of milliseconds between polls to check if the system still has its requirements satisfied.
 * **autoscalerGroupId ("default")**: The group ID for this fuse-autoscale instance. You can run multiple fuse-autoscale instances concurrently as long as they have unique group IDs. If you do, take care that the profilePatterns don't overlap or things might get crazy. See Example 2 below.
 * **scaleContainers (bool: true)**: Allow fuse-autoscale to create, start and remove containers.

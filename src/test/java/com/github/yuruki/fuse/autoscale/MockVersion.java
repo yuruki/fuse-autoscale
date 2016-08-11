@@ -8,12 +8,12 @@ import java.util.Map;
 import io.fabric8.api.Profile;
 import io.fabric8.api.Version;
 
-public class MockVersion implements Version {
+class MockVersion implements Version {
 
     private final String id;
     private final Map<String, Profile> profileMap = new HashMap<>();
 
-    public MockVersion(String id) {
+    MockVersion(String id) {
         this.id = id;
     }
 
@@ -27,7 +27,7 @@ public class MockVersion implements Version {
         return null;
     }
 
-    public void addProfile(Profile profile) {
+    void addProfile(Profile profile) {
         profileMap.put(profile.getId(), profile);
     }
 

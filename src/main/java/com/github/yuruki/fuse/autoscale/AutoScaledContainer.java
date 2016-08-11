@@ -1,17 +1,17 @@
-/**
- *  Copyright 2016 Jyrki Ruuskanen
- *
- *  Jyrki Ruuskanen licenses this file to you under the Apache License, version
- *  2.0 (the "License"); you may not use this file except in compliance
- *  with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- *  implied.  See the License for the specific language governing
- *  permissions and limitations under the License.
+/*
+   Copyright 2016 Jyrki Ruuskanen
+
+   Jyrki Ruuskanen licenses this file to you under the Apache License, version
+   2.0 (the "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+   implied.  See the License for the specific language governing
+   permissions and limitations under the License.
  */
 package com.github.yuruki.fuse.autoscale;
 
@@ -31,7 +31,7 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileRequirements;
 import io.fabric8.common.util.Arrays;
 
-public class AutoScaledContainer extends ProfileContainer implements Runnable {
+class AutoScaledContainer extends ProfileContainer implements Runnable {
 
     private final Container container;
     private final Map<String, Boolean> profiles = new HashMap<>();
@@ -95,11 +95,11 @@ public class AutoScaledContainer extends ProfileContainer implements Runnable {
         }
     }
 
-    public static AutoScaledContainer createAutoScaledContainer(AutoScaledGroup group, Container container, ContainerFactory containerFactory) throws Exception {
+    static AutoScaledContainer createAutoScaledContainer(AutoScaledGroup group, Container container, ContainerFactory containerFactory) throws Exception {
         return new AutoScaledContainer(container, container.getId(), group, false, containerFactory);
     }
 
-    public static AutoScaledContainer createAutoScaledContainer(AutoScaledGroup group, String id, boolean newHost, ContainerFactory containerFactory) throws Exception {
+    static AutoScaledContainer createAutoScaledContainer(AutoScaledGroup group, String id, boolean newHost, ContainerFactory containerFactory) throws Exception {
         return new AutoScaledContainer(null, id, group, newHost, containerFactory);
     }
 

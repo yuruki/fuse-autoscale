@@ -1,17 +1,17 @@
-/**
- *  Copyright 2016 Jyrki Ruuskanen
- *
- *  Jyrki Ruuskanen licenses this file to you under the Apache License, version
- *  2.0 (the "License"); you may not use this file except in compliance
- *  with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- *  implied.  See the License for the specific language governing
- *  permissions and limitations under the License.
+/*
+   Copyright 2016 Jyrki Ruuskanen
+
+   Jyrki Ruuskanen licenses this file to you under the Apache License, version
+   2.0 (the "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+   implied.  See the License for the specific language governing
+   permissions and limitations under the License.
  */
 package com.github.yuruki.fuse.autoscale;
 
@@ -28,33 +28,33 @@ import io.fabric8.api.ProfileRequirements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class ProfileContainer {
+abstract class ProfileContainer {
 
-    protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
-    protected final Map<String, ProfileContainer> childMap = new HashMap<>();
+    final Logger LOGGER = LoggerFactory.getLogger(getClass());
+    final Map<String, ProfileContainer> childMap = new HashMap<>();
 
     protected String id = "default";
-    protected Boolean removable = true;
-    protected Boolean removed = false;
-    protected Comparator<ProfileContainer> childComparator = new SortByContainerCount();
+    Boolean removable = true;
+    Boolean removed = false;
+    Comparator<ProfileContainer> childComparator = new SortByContainerCount();
 
-    final public boolean hasChild(String id) {
+    final boolean hasChild(String id) {
         return childMap.containsKey(id);
     }
 
-    final public ProfileContainer getChild(String id) {
+    final ProfileContainer getChild(String id) {
         return childMap.get(id);
     }
 
-    final public boolean hasProfile(Profile profile) {
+    final boolean hasProfile(Profile profile) {
         return hasProfile(profile.getId());
     }
 
-    final public boolean hasProfile(ProfileRequirements profile) {
+    final boolean hasProfile(ProfileRequirements profile) {
         return hasProfile(profile.getProfile());
     }
 
-    final public void addChild(ProfileContainer child) {
+    final void addChild(ProfileContainer child) {
         childMap.put(child.getId(), child);
     }
 
@@ -87,11 +87,11 @@ public abstract class ProfileContainer {
         }
     }
 
-    final public void removeProfile(Profile profile) throws Exception {
+    final void removeProfile(Profile profile) throws Exception {
         removeProfile(profile.getId());
     }
 
-    final public void removeProfile(ProfileRequirements profile) throws Exception {
+    final void removeProfile(ProfileRequirements profile) throws Exception {
         removeProfile(profile.getProfile());
     }
 
@@ -103,7 +103,7 @@ public abstract class ProfileContainer {
         }
     }
 
-    final public void removeProfile(ProfileRequirements profile, int count) throws Exception {
+    final void removeProfile(ProfileRequirements profile, int count) throws Exception {
         removeProfile(profile.getProfile(), count);
     }
 
@@ -120,7 +120,7 @@ public abstract class ProfileContainer {
         }
     }
 
-    public int getProfileCount() {
+    int getProfileCount() {
         int count = 0;
         for (ProfileContainer child : getChildren()) {
             count += child.getProfileCount();
@@ -128,11 +128,11 @@ public abstract class ProfileContainer {
         return count;
     }
 
-    final public int getProfileCount(Profile profile) {
+    final int getProfileCount(Profile profile) {
         return getProfileCount(profile.getId());
     }
 
-    final public int getProfileCount(ProfileRequirements profile) {
+    final int getProfileCount(ProfileRequirements profile) {
         return getProfileCount(profile.getProfile());
     }
 
@@ -148,19 +148,19 @@ public abstract class ProfileContainer {
         return id;
     }
 
-    public void remove() {
+    void remove() {
         removed = true;
     }
 
-    final public boolean isRemovable() {
+    private boolean isRemovable() {
         return removable && !removed;
     }
 
-    final public boolean isRemoved() {
+    private boolean isRemoved() {
         return removed;
     }
 
-    final public List<ProfileContainer> getChildren() {
+    final List<ProfileContainer> getChildren() {
         List<ProfileContainer> result = new ArrayList<>();
         for (ProfileContainer child : childMap.values()) {
             if (!child.isRemoved()) {
@@ -170,17 +170,17 @@ public abstract class ProfileContainer {
         return result;
     }
 
-    final public List<ProfileContainer> getEveryChild() {
+    final List<ProfileContainer> getEveryChild() {
         return new ArrayList<>(childMap.values());
     }
 
-    final public List<ProfileContainer> getSortedChildren() {
+    final List<ProfileContainer> getSortedChildren() {
         List<ProfileContainer> result = new LinkedList<>(getChildren());
         Collections.sort(result, childComparator);
         return result;
     }
 
-    final public List<ProfileContainer> getRemovableChildren() {
+    final List<ProfileContainer> getRemovableChildren() {
         List<ProfileContainer> result = new ArrayList<>();
         for (ProfileContainer child : getChildren()) {
             if (child.isRemovable()) {
@@ -190,7 +190,7 @@ public abstract class ProfileContainer {
         return result;
     }
 
-    final public void removeChild(int count) throws Exception {
+    final void removeChild(int count) throws Exception {
         for (int i = 0; i < count; i++) {
             List<ProfileContainer> removables = new LinkedList<>(getRemovableChildren());
             if (!removables.isEmpty()) {
@@ -210,7 +210,7 @@ public abstract class ProfileContainer {
         }
     }
 
-    final public List<ProfileContainer> getGrandChildren() {
+    final List<ProfileContainer> getGrandChildren() {
         List<ProfileContainer> result = new ArrayList<>();
         for (ProfileContainer child : getChildren()) {
             result.addAll(child.getChildren());
@@ -218,7 +218,7 @@ public abstract class ProfileContainer {
         return result;
     }
 
-    final public List<ProfileContainer> getSortedGrandChildren() {
+    final List<ProfileContainer> getSortedGrandChildren() {
         List<ProfileContainer> result = new LinkedList<>();
         Comparator<ProfileContainer> grandChildComparator = null;
         for (ProfileContainer child : getChildren()) {
@@ -232,7 +232,7 @@ public abstract class ProfileContainer {
         return result;
     }
 
-    final public List<ProfileContainer> getEveryGrandChild() {
+    final List<ProfileContainer> getEveryGrandChild() {
         List<ProfileContainer> result = new ArrayList<>();
         for (ProfileContainer child : getChildren()) {
             result.addAll(child.getEveryChild());
@@ -240,14 +240,14 @@ public abstract class ProfileContainer {
         return result;
     }
 
-    public static class SortByProfileCount implements Comparator<ProfileContainer> {
+    static class SortByProfileCount implements Comparator<ProfileContainer> {
         @Override
         public int compare(ProfileContainer container, ProfileContainer t1) {
             return container.getProfileCount() - t1.getProfileCount();
         }
     }
 
-    public static class SortByContainerCount implements Comparator<ProfileContainer> {
+    static class SortByContainerCount implements Comparator<ProfileContainer> {
         @Override
         public int compare(ProfileContainer container, ProfileContainer t1) {
             return container.getChildren().size() - t1.getChildren().size();

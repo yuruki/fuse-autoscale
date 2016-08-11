@@ -13,7 +13,7 @@ import io.fabric8.api.FabricService;
 import io.fabric8.api.Profile;
 import io.fabric8.api.Version;
 
-public class MockContainer implements Container {
+class MockContainer implements Container {
 
     private static AtomicInteger count = new AtomicInteger(0);
 
@@ -28,7 +28,7 @@ public class MockContainer implements Container {
     private Boolean destroyed;
     private Container parent;
 
-    public MockContainer(String id, boolean alive, String host, boolean root) {
+    MockContainer(String id, boolean alive, String host, boolean root) {
         this.id = id;
         this.alive = alive;
         this.host = host;
@@ -38,7 +38,7 @@ public class MockContainer implements Container {
         }
     }
 
-    public MockContainer(String id, boolean alive, String host) {
+    MockContainer(String id, boolean alive, String host) {
         this(id, alive, host, false);
     }
 
