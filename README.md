@@ -62,7 +62,7 @@ To enter so-called Maintenance mode which allows you to control container lifecy
 
 Set `scaleContainers` and `maxDeviation` back to their original values when you are done and the root container is up.
 
-Alternatively, if you want disable fuse-autoscale completely set enableAutoscale to false.
+Alternatively, if you want to disable fuse-autoscale completely set enableAutoscale to false.
 
 ## Caveats
 
