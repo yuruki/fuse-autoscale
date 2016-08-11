@@ -144,8 +144,8 @@ public final class AutoScaleController extends AbstractComponent implements Grou
         this.maxContainersPerHost = Integer.parseInt(properties.get(MAX_CONTAINERS_PER_HOST));
         this.dryRun = Boolean.parseBoolean(properties.get(DRY_RUN));
         this.rootContainerPattern = Pattern.compile(properties.get(ROOT_CONTAINER_PATTERN)).matcher("");
+        enableMasterZkCache(curator);
         if (enableAutoscale) {
-            enableMasterZkCache(curator);
             group = new ZooKeeperGroup<>(curator, ZkPath.AUTO_SCALE_CLUSTER.getPath() + "/" + autoscalerGroupId, AutoScalerNode.class);
             group.add(this);
             group.update(createState());
@@ -161,9 +161,11 @@ public final class AutoScaleController extends AbstractComponent implements Grou
         disableMasterZkCache();
         disableTimer();
         deactivateComponent();
-        group.remove(this);
-        Closeables.closeQuietly(group);
-        group = null;
+        if (null != group) {
+            group.remove(this);
+            Closeables.closeQuietly(group);
+            group = null;
+        }
     }
 
     @Override
