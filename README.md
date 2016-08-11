@@ -56,11 +56,13 @@ Create a new profile, add com.github.yuruki/fuse-autoscale bundle to it and add 
 
 ### Maintenance mode
 
-When `scaleContainers = true`, deleting containers or shutting them down in order to reboot the host cleanly can be difficult because the autoscaler keeps restarting and recreating the containers.
+When `scaleContainers = true`, deleting containers or shutting them down in order to reboot the host cleanly can be difficult because fuse-autoscale keeps restarting and recreating the containers.
 
 To enter so-called Maintenance mode which allows you to control container lifecycle manually, set `scaleContainers = false` and increase `maxDeviation` to allow orphaned profiles to migrate to the remaining containers (the value depends on your setup). You can perform the change with for example `fabric:profile-edit --pid io.fabric8.autoscale/scaleContainers=false --pid io.fabric8.autoscale/maxDeviation=1 your-autoscale-profile` command. The PID to use is the properties file name without the extension.
 
 Set `scaleContainers` and `maxDeviation` back to their original values when you are done and the root container is up.
+
+Alternatively, if you want disable fuse-autoscale completely set enableAutoscale to false.
 
 ## Caveats
 
