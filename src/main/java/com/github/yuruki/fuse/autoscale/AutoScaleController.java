@@ -151,7 +151,7 @@ public final class AutoScaleController extends AbstractComponent implements Grou
             group.update(createState());
             group.start();
         } else {
-            LOGGER.warn("Autoscaling is disabled (enableAutoscale = false)");
+            LOGGER.warn("{}: autoscaling is disabled (enableAutoscale = false)", autoscalerGroupId);
         }
         activateComponent();
     }
@@ -177,13 +177,13 @@ public final class AutoScaleController extends AbstractComponent implements Grou
                     try {
                         if (group.isMaster()) {
                             enableMasterZkCache(curator);
-                            LOGGER.info("AutoScaleController is the master");
+                            LOGGER.info("{}: AutoScaleController is the master", autoscalerGroupId);
                             group.update(state);
                             dataStore.trackConfiguration(runnable);
                             enableTimer();
                             onConfigurationChanged();
                         } else {
-                            LOGGER.info("AutoScaleController is not the master");
+                            LOGGER.info("{}: AutoScaleController is not the master", autoscalerGroupId);
                             group.update(state);
                             disableTimer();
                             dataStore.untrackConfiguration(runnable);
@@ -193,9 +193,9 @@ public final class AutoScaleController extends AbstractComponent implements Grou
                         // Ignore
                     }
                 } else {
-                    LOGGER.info("Not valid with master: " + group.isMaster()
+                    LOGGER.info("{}: Not valid with master: " + group.isMaster()
                             + " fabric: " + fabricService
-                            + " curator: " + curator);
+                            + " curator: " + curator, autoscalerGroupId);
                 }
                 break;
             case DISCONNECTED:
@@ -220,7 +220,7 @@ public final class AutoScaleController extends AbstractComponent implements Grou
             TimerTask timerTask = new TimerTask() {
                 @Override
                 public void run() {
-                    LOGGER.debug("autoscale timer");
+                    LOGGER.debug("{}: autoscale timer", autoscalerGroupId);
                     autoScale();
                 }
             };
@@ -237,14 +237,14 @@ public final class AutoScaleController extends AbstractComponent implements Grou
 
 
     private void onConfigurationChanged() {
-        LOGGER.debug("Configuration has changed; so checking the auto-scaling requirements");
+        LOGGER.debug("{}: configuration has changed, checking the auto-scaling requirements", autoscalerGroupId);
         autoScale();
     }
 
     private void autoScale() {
         try {
             if (fabricService == null) {
-                throw new Exception("FabricService not available");
+                throw new Exception(autoscalerGroupId + ": FabricService not available");
             }
             AutoScaledGroupOptions options = new AutoScaledGroupOptions(
                 containerPattern,
@@ -269,7 +269,7 @@ public final class AutoScaleController extends AbstractComponent implements Grou
                 new ContainerFactory(fabricService));
             autoScaledGroup.apply();
         } catch (Exception e) {
-            LOGGER.error("AutoScaledGroup {} canceled", autoscalerGroupId, e);
+            LOGGER.error("{}: AutoScaledGroup canceled", autoscalerGroupId, e);
         }
     }
 
