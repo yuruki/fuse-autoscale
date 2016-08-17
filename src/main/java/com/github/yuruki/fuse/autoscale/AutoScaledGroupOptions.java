@@ -46,6 +46,8 @@ class AutoScaledGroupOptions {
     static final String DRY_RUN_DEFAULT = "false";
     private Matcher rootContainerPattern = Pattern.compile(".*").matcher("");
     static final String ROOT_CONTAINER_PATTERN_DEFAULT = ".*";
+    private int changesPerPoll = 0;
+    static final String CHANGES_PER_POLL_DEFAULT = "0";
 
     AutoScaledGroupOptions() {}
 
@@ -62,7 +64,8 @@ class AutoScaledGroupOptions {
         boolean ignoreErrors,
         int maxContainersPerHost,
         boolean dryRun,
-        Matcher rootContainerPattern) {
+        Matcher rootContainerPattern,
+        int changesPerPoll) {
         this.containerPattern = containerPattern;
         this.profilePattern = profilePattern;
         this.scaleContainers = scaleContainers;
@@ -76,6 +79,7 @@ class AutoScaledGroupOptions {
         this.maxContainersPerHost = maxContainersPerHost;
         this.dryRun = dryRun;
         this.rootContainerPattern = rootContainerPattern;
+        this.changesPerPoll = changesPerPoll;
     }
 
     AutoScaledGroupOptions containerPattern(Matcher containerPattern) {
@@ -140,6 +144,11 @@ class AutoScaledGroupOptions {
 
     AutoScaledGroupOptions rootContainerPattern(Matcher rootContainerPattern) {
         setRootContainerPattern(rootContainerPattern);
+        return this;
+    }
+
+    AutoScaledGroupOptions changesPerPoll(int changesPerPoll) {
+        setChangesPerPoll(changesPerPoll);
         return this;
     }
 
@@ -245,5 +254,13 @@ class AutoScaledGroupOptions {
 
     void setRootContainerPattern(Matcher rootContainerPattern) {
         this.rootContainerPattern = rootContainerPattern;
+    }
+
+    int getChangesPerPoll() {
+        return changesPerPoll;
+    }
+
+    void setChangesPerPoll(int changesPerPoll) {
+        this.changesPerPoll = changesPerPoll;
     }
 }

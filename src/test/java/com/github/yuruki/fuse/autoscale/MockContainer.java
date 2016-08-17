@@ -25,7 +25,7 @@ class MockContainer implements Container {
     private Boolean root;
     private String versionId;
     private Version version;
-    private Boolean destroyed;
+    private Boolean destroyed = false;
     private Container parent;
 
     MockContainer(String id, boolean alive, String host, boolean root) {
@@ -314,6 +314,7 @@ class MockContainer implements Container {
     @Override
     public void destroy() {
         this.destroyed = true;
+        this.alive = false;
     }
 
     @Override

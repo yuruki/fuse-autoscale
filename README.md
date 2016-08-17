@@ -49,6 +49,7 @@ Fuse-autoscale uses the following parameters in io.fabric8.autoscale PID:
 * **ignoreErrors (bool: true)**: Perform auto-scaling even when all the requirements couldn't be satisfied.
 * **dryRun (bool: false)**: Do not apply any changes, only log them. Useful for safe testing on a live system.
 * **rootContainerPattern (regex: `.*`)**: Only root containers matching this pattern will be included in auto-scaling.
+* **changesPerPoll (int: 0)**: Determines how many containers can be affected per fuse-autoscale invocation/poll. 0 = no limit. This can be used to avoid overloading Fuse when there are a lot of changes.
 
 ## Usage
 

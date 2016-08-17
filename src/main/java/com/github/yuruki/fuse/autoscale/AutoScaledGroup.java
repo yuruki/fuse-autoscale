@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -363,14 +364,19 @@ class AutoScaledGroup extends ProfileContainer {
     }
 
     void apply(long maxWaitInMillis) {
-        Set<ProfileContainer> containers = new HashSet<>(getEveryGrandChild());
+        List<ProfileContainer> containers = getEveryGrandChildWithChanges();
         if (containers.isEmpty()) {
             LOGGER.debug("No changes to apply");
             return;
+        } else {
+            LOGGER.info("{} container(s) have changes", containers.size());
         }
-        ExecutorService taskExecutor = Executors.newFixedThreadPool(containers.size());
-        for (ProfileContainer container : containers) {
-            taskExecutor.execute((AutoScaledContainer) container);
+        int maxContainerCount = options.getChangesPerPoll() > 0 && options.getChangesPerPoll() < containers.size() ? options.getChangesPerPoll() : containers.size();
+        ExecutorService taskExecutor = Executors.newFixedThreadPool(maxContainerCount);
+        Iterator<ProfileContainer> iterator = containers.iterator();
+        int containerCount = 0;
+        for (; containerCount < maxContainerCount && iterator.hasNext(); containerCount++) {
+            taskExecutor.execute((AutoScaledContainer) iterator.next());
         }
         taskExecutor.shutdown();
         if (maxWaitInMillis > 0) {
@@ -380,6 +386,17 @@ class AutoScaledGroup extends ProfileContainer {
                 e.printStackTrace(); // Ignored
             }
         }
+        LOGGER.info("Applied changes to {} container(s). {} container(s) remaining.", containerCount, containers.size() - containerCount);
+    }
+
+    private List<ProfileContainer> getEveryGrandChildWithChanges() {
+        List<ProfileContainer> containersWithChanges = new ArrayList<>();
+        for (ProfileContainer container : getEveryGrandChild()) {
+            if (((AutoScaledContainer) container).hasChanges()) {
+                containersWithChanges.add(container);
+            }
+        }
+        return containersWithChanges;
     }
 
     AutoScaledGroupOptions getOptions() {

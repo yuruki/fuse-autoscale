@@ -236,7 +236,7 @@ public class AutoScaledGroupTest {
         containerList.add(otherContainer);
         MockContainer thirdContainer = new MockContainer("auto3", true, "1");
         otherContainer.setVersion(version);
-        containerList.add(otherContainer);
+        containerList.add(thirdContainer);
 
         // Set up profile requirements
         profileRequirements = new ArrayList<>();
@@ -378,6 +378,81 @@ public class AutoScaledGroupTest {
         assertEquals("Wrong profile count on unmatchedContainer", 1, unmatchedContainerProfiles.size());
     }
 
+    @Test
+    public void testTooManyContainersWithLimiter() throws Exception {
+        List<ProfileRequirements> profileRequirements;
+
+        // Set up profiles and versions
+        MockProfile oneProfile = new MockProfile("one-profile");
+        MockProfile otherProfile = new MockProfile("other-profile");
+        MockProfile noreqProfile = new MockProfile("no-requirements-auto");
+        MockProfile min1Profile = new MockProfile("min1-auto");
+        MockVersion version = new MockVersion("1.0");
+        version.addProfile(oneProfile);
+        version.addProfile(otherProfile);
+        version.addProfile(noreqProfile);
+        version.addProfile(min1Profile);
+
+        // Set up initial containers
+        List<Container> containerList = new ArrayList<>();
+        MockContainer oneContainer = new MockContainer("auto1", true, "1");
+        oneContainer.setVersion(version);
+        oneContainer.addProfiles(oneProfile);
+        containerList.add(oneContainer);
+        MockContainer otherContainer = new MockContainer("auto2", true, "1");
+        otherContainer.setVersion(version);
+        containerList.add(otherContainer);
+        MockContainer thirdContainer = new MockContainer("auto3", true, "1");
+        otherContainer.setVersion(version);
+        containerList.add(thirdContainer);
+
+        // Set up profile requirements
+        profileRequirements = new ArrayList<>();
+        profileRequirements.add(new ProfileRequirements(noreqProfile.getId())); // No requirements
+        profileRequirements.add(new ProfileRequirements(min1Profile.getId()).minimumInstances(1)); // Minimum instances
+
+        // Set up options
+        AutoScaledGroupOptions options = new AutoScaledGroupOptions()
+            .containerPattern(Pattern.compile("^auto.*$").matcher(""))
+            .profilePattern(Pattern.compile("^.*-auto$").matcher(""))
+            .scaleContainers(true)
+            .inheritRequirements(true)
+            .containerPrefix("auto")
+            .defaultMaxInstancesPerHost(1)
+            .averageInstancesPerContainer(10)
+            .changesPerPoll(1);
+
+        // Set up auto-scaled group
+        assertEquals("Warnings or errors logged too early", 0, appender.getLog().size());
+
+        // First apply
+        AutoScaledGroup autoScaledGroup = new AutoScaledGroup("test", options, containerList.toArray(new Container[containerList.size()]), profileRequirements.toArray(new ProfileRequirements[profileRequirements.size()]), new ContainerFactory(fabricService));
+        autoScaledGroup.apply(5000);
+        assertTrue("Container has min1Profile instance", !oneContainer.getProfileIds().contains(min1Profile.getId()));
+        assertTrue("Container is not alive", otherContainer.isAlive());
+        assertTrue("Container is alive", !thirdContainer.isAlive());
+
+        // Second apply
+        containerList.remove(thirdContainer);
+        autoScaledGroup = new AutoScaledGroup("test", options, containerList.toArray(new Container[containerList.size()]), profileRequirements.toArray(new ProfileRequirements[profileRequirements.size()]), new ContainerFactory(fabricService));
+        autoScaledGroup.apply(5000);
+        assertTrue("Container has min1Profile instance", !oneContainer.getProfileIds().contains(min1Profile.getId()));
+        assertTrue("Container is alive", !otherContainer.isAlive());
+        assertTrue("Container is alive", !thirdContainer.isAlive());
+
+        // Third apply
+        containerList.remove(otherContainer);
+        autoScaledGroup = new AutoScaledGroup("test", options, containerList.toArray(new Container[containerList.size()]), profileRequirements.toArray(new ProfileRequirements[profileRequirements.size()]), new ContainerFactory(fabricService));
+        autoScaledGroup.apply(5000);
+        assertTrue("Container doesn't have min1Profile instance", oneContainer.getProfileIds().contains(min1Profile.getId()));
+        assertTrue("Container is alive", !otherContainer.isAlive());
+        assertTrue("Container is alive", !thirdContainer.isAlive());
+
+        // Non-matching parts should remain untouched
+        List<Profile> oneContainerProfiles = Arrays.asList(oneContainer.getProfiles());
+        assertTrue("oneContainer doesn't have oneProfile", oneContainerProfiles.contains(oneProfile));
+    }
+
     private class TestAppender extends AppenderSkeleton {
         private final List<LoggingEvent> log = new ArrayList<>();
 
@@ -395,7 +470,7 @@ public class AutoScaledGroupTest {
             return false;
         }
 
-        public List<LoggingEvent> getLog() {
+        List<LoggingEvent> getLog() {
             return new ArrayList<>(log);
         }
     }

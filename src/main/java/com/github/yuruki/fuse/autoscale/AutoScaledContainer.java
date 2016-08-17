@@ -18,12 +18,10 @@ package com.github.yuruki.fuse.autoscale;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import io.fabric8.api.Container;
@@ -34,7 +32,7 @@ import io.fabric8.common.util.Arrays;
 class AutoScaledContainer extends ProfileContainer implements Runnable {
 
     private final Container container;
-    private final Map<String, Boolean> profiles = new HashMap<>();
+    private final Map<String, Boolean> profileMap = new HashMap<>();
     private final AutoScaledGroup group;
     private final ContainerFactory containerFactory;
 
@@ -80,9 +78,9 @@ class AutoScaledContainer extends ProfileContainer implements Runnable {
         if (container != null && container.getProfileIds() != null) {
             for (String profileId : container.getProfileIds()) {
                 if (group.hasRequirements(profileId)) {
-                    profiles.put(profileId, true); // Profile with requirements. Marked as already assigned.
+                    profileMap.put(profileId, true); // Profile with requirements. Marked as already assigned.
                 } else if (group.matchesProfilePattern(profileId)) {
-                    profiles.put(profileId, false); // Matched profile with no requirements. Marked as not assigned.
+                    profileMap.put(profileId, false); // Matched profile with no requirements. Marked as not assigned.
                 } else if (!profileId.equals("default") && removable) {
                     removable = false; // Having any unmatched profiles on the container means we can't remove it
                 }
@@ -124,7 +122,7 @@ class AutoScaledContainer extends ProfileContainer implements Runnable {
     @Override
     public int getProfileCount() {
         int count = 0;
-        for (Boolean assigned : profiles.values()) {
+        for (Boolean assigned : profileMap.values()) {
             if (assigned) {
                 count++;
             }
@@ -134,7 +132,7 @@ class AutoScaledContainer extends ProfileContainer implements Runnable {
 
     @Override
     public void removeProfile(String profile) {
-        profiles.put(profile, false);
+        profileMap.put(profile, false);
     }
 
     @Override
@@ -143,7 +141,7 @@ class AutoScaledContainer extends ProfileContainer implements Runnable {
     }
 
     public void removeProfiles(long count) {
-        Iterator<String> iterator = profiles.keySet().iterator();
+        Iterator<String> iterator = profileMap.keySet().iterator();
         for (int i = 0; i < count && iterator.hasNext(); i++) {
             iterator.next();
             iterator.remove();
@@ -152,7 +150,7 @@ class AutoScaledContainer extends ProfileContainer implements Runnable {
 
     @Override
     public boolean hasProfile(String profileId) {
-        return profiles.containsKey(profileId) && profiles.get(profileId);
+        return profileMap.containsKey(profileId) && profileMap.get(profileId);
     }
 
     @Override
@@ -166,17 +164,23 @@ class AutoScaledContainer extends ProfileContainer implements Runnable {
         } else if (profile.getMaximumInstances() != null && group.getProfileCount(profile) >= profile.getMaximumInstances()) {
             throw new Exception("Can't assign " + profile.getProfile() + " to container " + id + ", due to maxInstances (" + profile.getMaximumInstances() + ").");
         } else {
-            profiles.put(profile.getProfile(), true);
+            profileMap.put(profile.getProfile(), true);
         }
     }
 
     @Override
     public int getProfileCount(String profileId) {
-        if (profiles.containsKey(profileId) && profiles.get(profileId)) {
+        if (profileMap.containsKey(profileId) && profileMap.get(profileId)) {
             return 1;
         } else {
             return 0;
         }
+    }
+
+    boolean hasChanges() {
+        return container != null && removed
+            || (container != null && !container.isAlive() && getProfileCount() > 0)
+            || ProfileChanges.getProfileChanges(this).getProfileChangeCount() > 0;
     }
 
     @Override
@@ -188,36 +192,11 @@ class AutoScaledContainer extends ProfileContainer implements Runnable {
             return;
         }
 
-        // Get current profiles for the container
-        Set<String> currentProfiles = new HashSet<>();
-        if (container != null && container.getProfileIds() != null) {
-            for (String profileId : container.getProfileIds()) {
-                currentProfiles.add(profileId);
-            }
-        }
-
-        // Find the changes
-        Set<String> resultSet = new HashSet<>(currentProfiles);
-        Set<String> additions = new HashSet<>();
-        Set<String> removals = new HashSet<>();
-        for (Map.Entry<String, Boolean> entry : profiles.entrySet()) {
-            final String profile = entry.getKey();
-            if (entry.getValue()) {
-                resultSet.add(profile);
-                if (!currentProfiles.contains(profile)) {
-                    additions.add(profile);
-                }
-            } else {
-                resultSet.remove(profile);
-                if (currentProfiles.contains(profile)) {
-                    removals.add(profile);
-                }
-            }
-        }
+        ProfileChanges profileChanges = ProfileChanges.getProfileChanges(this);
 
         // Apply possible changes
-        if (!resultSet.equals(currentProfiles) || (container != null && !container.isAlive() && getProfileCount() > 0)) {
-            List<String> sortedResult = new LinkedList<>(resultSet);
+        if (profileChanges.getProfileChangeCount() > 0 || (container != null && !container.isAlive() && getProfileCount() > 0)) {
+            List<String> sortedResult = new LinkedList<>(profileChanges.getResultProfiles());
             Collections.sort(sortedResult);
             if (container != null) {
                 List<Profile> profiles = new ArrayList<>();
@@ -231,9 +210,9 @@ class AutoScaledContainer extends ProfileContainer implements Runnable {
                 }
                 // Update existing container
                 if (group.getOptions().isDryRun()) {
-                    LOGGER.info("Would have updated container {}: added: {} removed: {}", id, Arrays.join(", ", additions), Arrays.join(", ", removals));
+                    LOGGER.info("Would have updated container {}: added: {} removed: {}", id, Arrays.join(", ", profileChanges.getAddedProfiles()), Arrays.join(", ", profileChanges.getRemovedProfiles()));
                 } else {
-                    LOGGER.info("Updating container {}: added: {} removed: {}", id, Arrays.join(", ", additions), Arrays.join(", ", removals));
+                    LOGGER.info("Updating container {}: added: {} removed: {}", id, Arrays.join(", ", profileChanges.getAddedProfiles()), Arrays.join(", ", profileChanges.getRemovedProfiles()));
                     container.setProfiles(profiles.toArray(new Profile[profiles.size()]));
                     if (!container.isAlive() && getProfileCount() > 0) { // Only auto-start containers with managed profiles
                         LOGGER.info("Starting container {}", id);
@@ -255,5 +234,13 @@ class AutoScaledContainer extends ProfileContainer implements Runnable {
                 }
             }
         }
+    }
+
+    Container getContainer() {
+        return container;
+    }
+
+    Map<String, Boolean> getProfileMap() {
+        return profileMap;
     }
 }

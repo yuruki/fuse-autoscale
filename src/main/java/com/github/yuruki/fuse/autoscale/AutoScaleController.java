@@ -112,6 +112,9 @@ public final class AutoScaleController extends AbstractComponent implements Grou
     @Property(value = AutoScaledGroupOptions.ROOT_CONTAINER_PATTERN_DEFAULT, label = "Root container name pattern", description = "Only root containers matching this pattern will be included in autoscaling.")
     private static final String ROOT_CONTAINER_PATTERN = "rootContainerPattern";
     private Matcher rootContainerPattern;
+    @Property(value = AutoScaledGroupOptions.CHANGES_PER_POLL_DEFAULT, label = "Max changes per poll", description = "Determines how many containers can be affected per fuse-autoscale invocation/poll. 0 = no limit.")
+    private static final String CHANGES_PER_POLL = "changesPerPoll";
+    private Integer changesPerPoll;
 
     private AtomicReference<Timer> timer = new AtomicReference<>();
 
@@ -144,6 +147,7 @@ public final class AutoScaleController extends AbstractComponent implements Grou
         this.maxContainersPerHost = Integer.parseInt(properties.get(MAX_CONTAINERS_PER_HOST));
         this.dryRun = Boolean.parseBoolean(properties.get(DRY_RUN));
         this.rootContainerPattern = Pattern.compile(properties.get(ROOT_CONTAINER_PATTERN)).matcher("");
+        this.changesPerPoll = Integer.parseInt(properties.get(CHANGES_PER_POLL));
         enableMasterZkCache(curator);
         if (enableAutoscale) {
             group = new ZooKeeperGroup<>(curator, ZkPath.AUTO_SCALE_CLUSTER.getPath() + "/" + autoscalerGroupId, AutoScalerNode.class);
@@ -261,7 +265,8 @@ public final class AutoScaleController extends AbstractComponent implements Grou
                 ignoreErrors,
                 maxContainersPerHost,
                 dryRun,
-                rootContainerPattern);
+                rootContainerPattern,
+                changesPerPoll);
             List<ProfileRequirements> profileRequirements = fabricService.getRequirements().getProfileRequirements();
             AutoScaledGroup autoScaledGroup = new AutoScaledGroup(
                 autoscalerGroupId,
