@@ -2,6 +2,7 @@ package com.github.yuruki.fuse.autoscale;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -394,7 +395,7 @@ public class AutoScaledGroupTest {
         version.addProfile(min1Profile);
 
         // Set up initial containers
-        List<Container> containerList = new ArrayList<>();
+        List<Container> containerList = new LinkedList<>();
         MockContainer oneContainer = new MockContainer("auto1", true, "1");
         oneContainer.setVersion(version);
         oneContainer.addProfiles(oneProfile);
