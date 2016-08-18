@@ -369,7 +369,7 @@ class AutoScaledGroup extends ProfileContainer {
             LOGGER.debug("No changes to apply");
             return;
         } else {
-            LOGGER.info("{} container(s) have changes", containers.size());
+            LOGGER.info("{} container(s) have pending changes", containers.size());
         }
         int maxContainerCount = options.getChangesPerPoll() > 0 && options.getChangesPerPoll() < containers.size() ? options.getChangesPerPoll() : containers.size();
         ExecutorService taskExecutor = Executors.newFixedThreadPool(maxContainerCount);
